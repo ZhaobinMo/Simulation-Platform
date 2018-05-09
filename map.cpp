@@ -1,0 +1,667 @@
+#include "map.h"
+#include "ui_map.h"
+#include "moving.h"
+
+#include<QApplication>
+#include<QPixmap>
+#include<QThread>
+#include <QEventLoop>
+#include <QTimer>
+#include <QDebug>
+#include <QFile>
+#include <QString>
+#include <iostream>
+#include <stdio.h>
+
+
+
+
+Map::Map(QWidget *parent) :
+    QWidget(parent),
+    ui(new Ui::Map)
+{
+    ui->setupUi(this);
+    timer = new QTimer(this);
+//    id_delay = startTimer(t_delay);
+//    id_display = startTimer(t_update);
+    timer->start(t_paint);//  67/2 ms
+    connect(timer,SIGNAL(timeout()),this,SLOT(update()));
+
+
+    setWindowTitle("The Map");
+    resize(1000, 1000);
+    ACCLERATE = 1.3;//最大减速度
+    NUM_COLLISION = 0;//碰撞次数
+    Dist_Car = new double[8];
+    Fake_Dist_Car = new double[8];
+    V_Car = new double*[8];
+    for (int i=0;i<8;i++){
+        V_Car[i] = new double[2];
+    }
+    Dist_Car[0] = OutDistDownLeft_7;
+    Dist_Car[1] = OutDistDownRight_7;
+    Dist_Car[2] = OutDistUpRight_7;
+    Dist_Car[3] = OutDistUpLeft_7;
+    Dist_Car[4] = InDistDownLeft_7;
+    Dist_Car[5] = InDistDownRight_7;
+    Dist_Car[6] = InDistUpRight_7;
+    Dist_Car[7] = InDistUpLeft_7;
+    Fake_Dist_Car = Dist_Car;
+
+    //id编码成比赛要求的id
+    V_Car[0][0] = 7;
+    V_Car[1][0] = 5;
+    V_Car[2][0] = 3;
+    V_Car[3][0] = 1;
+    V_Car[4][0] = 6;
+    V_Car[5][0] = 4;
+    V_Car[6][0] = 2;
+    V_Car[7][0] = 8;
+    for (int i=0;i<8;i++){
+        V_Car[i][1] = 103;
+    }
+    V_Car_real = V_Car;
+    //初始化 control point
+    double * temp_xy;
+    temp_xy = new double[2];
+
+    Cell_Point = new double *[16];
+    for (int i=0;i<16;i++){
+        Cell_Point[i] = new double[8];
+        for (int j=0;j<8;j++){
+            Cell_Point[i][j]=0;
+        }
+    }
+    //***********最下层*************//
+    //1(左下角)
+    Cell_Point[0][0] = 0;// 0表示小圈 （tag）第一列和第二列是竖的方向的tag和距离
+    Cell_Point[0][1] = InDistDownLeft_1_End - r; // 点在（tag）圈上的位置距初始点的距离
+
+    Cell_Point[0][3] = 0;//第三列和第四列是横的方向的
+    Cell_Point[0][4] = InDistDownLeft_8 + r;
+    temp_xy = small(Cell_Point[0][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[0][6] = temp_xy[0];//InCorDownLeft_1_X;
+    Cell_Point[0][7] = temp_xy[1];//InCorDownLeft_7_Y;
+
+    //2
+    Cell_Point[1][0] = 1;
+    Cell_Point[1][1] = OutDistDownLeft_1_End - r;
+    Cell_Point[1][3] = 0;
+    Cell_Point[1][4] = Cell_Point[0][4] + OutBridge;
+    temp_xy = big(Cell_Point[1][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[1][6] = temp_xy[0];//OutCorDownLeft_1_X;
+    Cell_Point[1][7] = temp_xy[1];//InCorDownLeft_7_Y;
+    //3
+    Cell_Point[2][0] = 1;
+    Cell_Point[2][1] = OutDistDownRight_8 + r;
+    Cell_Point[2][3] = 0;
+    Cell_Point[2][4] = Cell_Point[1][4] + OutBridge;
+    temp_xy = big(Cell_Point[2][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[2][6] = temp_xy[0];//OutCorDownRight_8_X;
+    Cell_Point[2][7] = temp_xy[1];//InCorDownLeft_7_Y;
+    //4（右下角）
+    Cell_Point[3][0] = 0;
+    Cell_Point[3][1] = InDistDownRight_8 + r;
+    Cell_Point[3][3] = 0;
+    Cell_Point[3][4] = Cell_Point[2][4] + OutBridge;
+    temp_xy = small(Cell_Point[3][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[3][6] = temp_xy[0];//InCorDownRight_8_X;
+    Cell_Point[3][7] = temp_xy[1];//InCorDownLeft_7_Y;
+
+
+    //***********第二层*************//
+    //5
+    Cell_Point[4][0] = 0;
+    Cell_Point[4][1] = Cell_Point[0][1] - OutBridge;
+    Cell_Point[4][3] = 1;
+    Cell_Point[4][4] = OutDistDownLeft_8 + r;
+    temp_xy = small(Cell_Point[4][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[4][6] = temp_xy[0];//Cell_Point[0][6];
+    Cell_Point[4][7] = temp_xy[1];//Cell_Point[0][7] - OutBridge;
+    //6
+    Cell_Point[5][0] = 1;
+    Cell_Point[5][1] = Cell_Point[1][1] - OutBridge;
+    Cell_Point[5][3] = 1;
+    Cell_Point[5][4] = Cell_Point[4][4] + OutBridge;
+    temp_xy = big(Cell_Point[5][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[5][6] = temp_xy[0];//Cell_Point[1][6];
+    Cell_Point[5][7] = temp_xy[1];//Cell_Point[1][7] - OutBridge;
+    //7
+    Cell_Point[6][0] = 1;
+    Cell_Point[6][1] = Cell_Point[2][1] + OutBridge;
+    Cell_Point[6][3] = 1;
+    Cell_Point[6][4] = Cell_Point[5][4] + OutBridge;
+    temp_xy = big(Cell_Point[6][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[6][6] = temp_xy[0];//Cell_Point[2][6];
+    Cell_Point[6][7] = temp_xy[1];//Cell_Point[2][7] - OutBridge;
+    //8
+    Cell_Point[7][0] = 0;
+    Cell_Point[7][1] = Cell_Point[3][1] + OutBridge;
+    Cell_Point[7][3] = 1;
+    Cell_Point[7][4] = Cell_Point[6][4] + OutBridge;
+    temp_xy = small(Cell_Point[7][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[7][6] = temp_xy[0];//Cell_Point[3][6];
+    Cell_Point[7][7] = temp_xy[1];//Cell_Point[3][7] - OutBridge;
+
+    //***********第三层*************//
+    //9
+    Cell_Point[8][0] = 0;//
+    Cell_Point[8][1] = Cell_Point[4][1] - OutBridge;
+    Cell_Point[8][3] = 1;//
+    Cell_Point[8][4] = OutDistUpLeft_1 - r;
+    temp_xy = small(Cell_Point[8][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[8][6] = temp_xy[0];//[4][6];
+    Cell_Point[8][7] = temp_xy[1];//Cell_Point[4][7] - OutBridge;
+    //10
+    Cell_Point[9][0] = 1;
+    Cell_Point[9][1] = Cell_Point[5][1] - OutBridge;
+    Cell_Point[9][3] = 1;
+    Cell_Point[9][4] = Cell_Point[8][4] - OutBridge;
+    temp_xy = big(Cell_Point[9][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[9][6] = temp_xy[0];//Cell_Point[5][6];
+    Cell_Point[9][7] = temp_xy[1];//Cell_Point[5][7] - OutBridge;
+    //11
+    Cell_Point[10][0] = 1;
+    Cell_Point[10][1] = Cell_Point[6][1] + OutBridge;
+    Cell_Point[10][3] = 1;
+    Cell_Point[10][4] = Cell_Point[9][4] - OutBridge;
+    temp_xy = big(Cell_Point[10][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[10][6] = temp_xy[0];//Cell_Point[6][6];
+    Cell_Point[10][7] = temp_xy[1];//Cell_Point[6][7] - OutBridge;
+    //12
+    Cell_Point[11][0] = 0;
+    Cell_Point[11][1] = Cell_Point[7][1] + OutBridge;
+    Cell_Point[11][3] = 1;
+    Cell_Point[11][4] = Cell_Point[10][4] - OutBridge;
+    temp_xy = small(Cell_Point[11][1]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[11][6] = temp_xy[0];//Cell_Point[7][6];
+    Cell_Point[11][7] = temp_xy[1];//Cell_Point[7][7] - OutBridge;
+
+    //***********第四层*************//
+    //13
+    Cell_Point[12][0] = 0;
+    Cell_Point[12][1] = Cell_Point[8][1] - OutBridge;
+    Cell_Point[12][3] = 0;
+    Cell_Point[12][4] = InDistUpLeft_1- r;
+    temp_xy = small(Cell_Point[12][4]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[12][6] = temp_xy[0];//Cell_Point[8][6];
+    Cell_Point[12][7] = temp_xy[1];//Cell_Point[8][7] - OutBridge;
+    //14
+    Cell_Point[13][0] = 1;
+    Cell_Point[13][1] = Cell_Point[9][1] - OutBridge;
+    Cell_Point[13][3] = 0;
+    Cell_Point[13][4] = Cell_Point[12][4] - OutBridge;
+    temp_xy = small(Cell_Point[13][4]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[13][6] = temp_xy[0];//Cell_Point[9][6];
+    Cell_Point[13][7] = temp_xy[1];//Cell_Point[9][7] - OutBridge;
+    //15
+    Cell_Point[14][0] = 1;
+    Cell_Point[14][1] = Cell_Point[10][1] + OutBridge;
+    Cell_Point[14][3] = 0;
+    Cell_Point[14][4] = Cell_Point[13][4] - OutBridge;
+    temp_xy = small(Cell_Point[14][4]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[14][6] = temp_xy[0];//Cell_Point[10][6];
+    Cell_Point[14][7] = temp_xy[1];//Cell_Point[10][7] - OutBridge;
+    //16（右下角）
+    Cell_Point[15][0] = 0;
+    Cell_Point[15][1] = Cell_Point[11][1] + OutBridge;
+    Cell_Point[15][3] = 0;
+    Cell_Point[15][4] = Cell_Point[14][4] - OutBridge;
+    temp_xy = small(Cell_Point[15][4]);
+    //qDebug()<<temp_xy[0]<<' '<<temp_xy[1];
+    Cell_Point[15][6] = temp_xy[0];//Cell_Point[11][6];
+    Cell_Point[15][7] = temp_xy[1];//Cell_Point[11][7] - OutBridge;
+
+//    for (int i=0;i<16;i++){
+//        //p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),10,10);
+//        qDebug()<<QString('i=')<<i<<' '<<Cell_Point[i][6]<<' '<<Cell_Point[i][7];
+//    }
+
+
+}
+
+
+Map::~Map()
+{
+    delete ui;
+}
+
+void Map::end_game(){
+    timer->stop();
+    qDebug()<<"stop";
+}
+int Map::show_num_collision(){
+    return NUM_COLLISION;
+}
+void Map::paintEvent(QPaintEvent *event)
+{
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setWindow(0, 0, 1000, 1000);
+    p.translate(500,500);//重新设定坐标原点
+    drawmap(&p);
+    drawcircles(&p);
+}
+
+void Map::drawmap(QPainter *p)
+{
+    p->setBrush(Qt::black);
+    p->setPen(Qt::black);
+    //画大圈的直线
+    p->drawLine(QPoint(OutCorDownLeft_1_X, OutCorDownLeft_1_Y), QPoint(OutCorDownLeft_2_X, OutCorDownLeft_2_Y));
+    p->drawLine(QPoint(OutCorDownLeft_3_X, OutCorDownLeft_3_Y), QPoint(OutCorDownLeft_4_X, OutCorDownLeft_4_Y));
+    p->drawLine(QPoint(OutCorDownLeft_5_X, OutCorDownLeft_5_Y), QPoint(OutCorDownLeft_6_X, OutCorDownLeft_6_Y));
+    p->drawLine(QPoint(OutCorDownLeft_7_X, OutCorDownLeft_7_Y), QPoint(OutCorDownRight_2_X, OutCorDownRight_2_Y));
+    p->drawLine(QPoint(OutCorDownRight_3_X, OutCorDownRight_3_Y), QPoint(OutCorDownRight_4_X, OutCorDownRight_4_Y));
+    p->drawLine(QPoint(OutCorDownRight_5_X, OutCorDownRight_5_Y), QPoint(OutCorDownRight_6_X, OutCorDownRight_6_Y));
+    p->drawLine(QPoint(OutCorDownRight_7_X, OutCorDownRight_7_Y), QPoint(OutCorUpRight_2_X, OutCorUpRight_2_Y));
+    p->drawLine(QPoint(OutCorUpRight_3_X, OutCorUpRight_3_Y), QPoint(OutCorUpRight_4_X, OutCorUpRight_4_Y));
+    p->drawLine(QPoint(OutCorUpRight_5_X, OutCorUpRight_5_Y), QPoint(OutCorUpRight_6_X, OutCorUpRight_6_Y));
+    p->drawLine(QPoint(OutCorUpRight_7_X, OutCorUpRight_7_Y), QPoint(OutCorUpLeft_2_X, OutCorUpLeft_2_Y));
+    p->drawLine(QPoint(OutCorUpLeft_3_X, OutCorUpLeft_3_Y), QPoint(OutCorUpLeft_4_X, OutCorUpLeft_4_Y));
+    p->drawLine(QPoint(OutCorUpLeft_5_X, OutCorUpLeft_5_Y), QPoint(OutCorUpLeft_6_X, OutCorUpLeft_6_Y));
+    p->drawLine(QPoint(OutCorUpLeft_7_X, OutCorUpLeft_7_Y), QPoint(OutCorDownLeft_1_X, OutCorDownLeft_1_Y));
+    //画大圈的弧
+    p->drawArc(OutCorDownLeft_3_X-R,OutCorDownLeft_2_Y-R,2*R,2*R,0*90*16,-90*16);
+    p->drawArc(OutCorDownLeft_5_X,OutCorDownLeft_5_Y-R,2*R,2*R,3*90*16,-90*16);
+    p->drawArc(OutCorDownLeft_6_X,OutCorDownLeft_6_Y-R,2*R,2*R,180*16,-90*16);
+    p->drawArc(OutCorDownRight_2_X-R,OutCorDownRight_2_Y,2*R,2*R,90*16,-90*16);
+    p->drawArc(OutCorDownRight_5_X-R,OutCorDownRight_4_Y-R,2*R,2*R,0,-90*16);
+    p->drawArc(OutCorDownRight_7_X,OutCorDownRight_7_Y-R,2*R,2*R,3*90*16,-90*16);
+    p->drawArc(OutCorUpRight_2_X,OutCorUpRight_2_Y-R,2*R,2*R,2*90*16,-90*16);
+    p->drawArc(OutCorUpRight_4_X-R,OutCorUpRight_4_Y,2*R,2*R,90*16,-90*16);
+    p->drawArc(OutCorUpRight_7_X-R,OutCorUpRight_6_Y-R,2*R,2*R,0,-90*16);
+    p->drawArc(OutCorUpLeft_3_X,OutCorUpLeft_3_Y-R,2*R,2*R,3*90*16,-90*16);
+    p->drawArc(OutCorUpLeft_4_X,OutCorUpLeft_4_Y-R,2*R,2*R,2*90*16,-90*16);
+    p->drawArc(OutCorUpLeft_6_X-R,OutCorUpLeft_6_Y,2*R,2*R,90*16,-90*16);
+    //画小圈的直线
+    p->drawLine(QPoint(InCorDownLeft_1_X, InCorDownLeft_1_Y), QPoint(InCorDownLeft_2_X, InCorDownLeft_2_Y));
+    p->drawLine(QPoint(InCorDownLeft_3_X, InCorDownLeft_3_Y), QPoint(InCorDownLeft_4_X, InCorDownLeft_4_Y));
+    p->drawLine(QPoint(InCorDownLeft_5_X, InCorDownLeft_5_Y), QPoint(InCorDownLeft_6_X, InCorDownLeft_6_Y));
+    p->drawLine(QPoint(InCorDownLeft_7_X, InCorDownLeft_7_Y), QPoint(InCorDownRight_2_X, InCorDownRight_2_Y));
+    p->drawLine(QPoint(InCorDownRight_3_X, InCorDownRight_3_Y), QPoint(InCorDownRight_4_X, InCorDownRight_4_Y));
+    p->drawLine(QPoint(InCorDownRight_5_X, InCorDownRight_5_Y), QPoint(InCorDownRight_6_X, InCorDownRight_6_Y));
+    p->drawLine(QPoint(InCorDownRight_7_X, InCorDownRight_7_Y), QPoint(InCorUpRight_2_X, InCorUpRight_2_Y));
+    p->drawLine(QPoint(InCorUpRight_3_X, InCorUpRight_3_Y), QPoint(InCorUpRight_4_X, InCorUpRight_4_Y));
+    p->drawLine(QPoint(InCorUpRight_5_X, InCorUpRight_5_Y), QPoint(InCorUpRight_6_X, InCorUpRight_6_Y));
+    p->drawLine(QPoint(InCorUpRight_7_X, InCorUpRight_7_Y), QPoint(InCorUpLeft_2_X, InCorUpLeft_2_Y));
+    p->drawLine(QPoint(InCorUpLeft_3_X, InCorUpLeft_3_Y), QPoint(InCorUpLeft_4_X, InCorUpLeft_4_Y));
+    p->drawLine(QPoint(InCorUpLeft_5_X, InCorUpLeft_5_Y), QPoint(InCorUpLeft_6_X, InCorUpLeft_6_Y));
+    p->drawLine(QPoint(InCorUpLeft_7_X, InCorUpLeft_7_Y), QPoint(InCorDownLeft_1_X, InCorDownLeft_1_Y));
+    //画小圈的弧
+
+    p->drawArc(InCorDownLeft_3_X-r,InCorDownLeft_2_Y-r,2*r,2*r,0*90*16,-90*16);
+    p->drawArc(InCorDownLeft_5_X,InCorDownLeft_5_Y-r,2*r,2*r,3*90*16,-90*16);
+    p->drawArc(InCorDownLeft_6_X,InCorDownLeft_6_Y-r,2*r,2*r,180*16,-90*16);
+    p->drawArc(InCorDownRight_2_X-r,InCorDownRight_2_Y,2*r,2*r,90*16,-90*16);
+    p->drawArc(InCorDownRight_5_X-r,InCorDownRight_4_Y-r,2*r,2*r,0,-90*16);
+    p->drawArc(InCorDownRight_7_X,InCorDownRight_7_Y-r,2*r,2*r,3*90*16,-90*16);
+    p->drawArc(InCorUpRight_2_X,InCorUpRight_2_Y-r,2*r,2*r,2*90*16,-90*16);
+    p->drawArc(InCorUpRight_4_X-r,InCorUpRight_4_Y,2*r,2*r,90*16,-90*16);
+    p->drawArc(InCorUpRight_7_X-r,InCorUpRight_6_Y-r,2*r,2*r,0,-90*16);
+    p->drawArc(InCorUpLeft_3_X,InCorUpLeft_3_Y-r,2*r,2*r,3*90*16,-90*16);
+    p->drawArc(InCorUpLeft_4_X,InCorUpLeft_4_Y-r,2*r,2*r,2*90*16,-90*16);
+    p->drawArc(InCorUpLeft_6_X-r,InCorUpLeft_6_Y,2*r,2*r,90*16,-90*16);
+
+//    for (int i=12;i<16;i++){
+//    p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),10,10);
+//}
+
+    //
+
+
+
+
+    //p->restore();
+
+}
+
+void Map::drawcircles(QPainter *p)
+{
+    count++;
+    if (count>1){
+        count = count - 2;
+    }
+    p->setBrush(Qt::red);
+    p->setPen(Qt::red);
+    //距离转换到坐标
+    double ** Cor_Car;
+    double ** Fake_Cor_Car;
+    Cor_Car = new double*[8];
+    for (int i=0;i<8;i++)
+        Cor_Car[i] = new double[3];
+    Fake_Cor_Car = Cor_Car;//初始化
+    Cor_Car = dist2cor(Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);
+    Fake_Cor_Car = dist2cor(Fake_Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);//赋值
+
+    //给Fake_Cor_Car加上噪声信号
+    for (int i=0;i<8;i++){
+        Fake_Cor_Car[i][1] += 3*get_random_error();
+        Fake_Cor_Car[i][2] += 3*get_random_error();
+    }
+
+    //得到控制信号V
+
+    if (count == 1){
+        V_Car = decision_making(Fake_Cor_Car);//给的是有误差的位置
+
+        //判断脉冲
+        for (int i=0;i<8;i++){
+            V_Car[i][1] = interp(V_Car[i][1]);
+        }
+
+
+        //V_Car = func_tag_v_main(V_Car,Dist_Car);
+        //加入控制误差
+        for (int i=0;i<8;i++){
+           if (V_Car[i][1] <= 50)
+               V_Car[i][1] = V_Car[i][1] * (1 + 0.1*get_random_error());
+           else
+               V_Car[i][1] = V_Car[i][1] * (1 + 0.25*get_random_error());
+        }
+
+    }
+
+    //更新实际的速度
+    V_Car_real = func_real_v(V_Car_real,V_Car,ACCLERATE);
+    //******************把速度大小、速度tag记录在.txt文件中*****************//
+//            QFile data("file.txt");
+//            if (data.open(QFile::WriteOnly | QIODevice::Append)) {
+//                QTextStream out(&data);
+//                for (int i=0;i<8;i++){
+//                    for (int j=0;j<2;j++){
+//                        out << V_Car_real[i][j] <<"\t";
+//                    }
+//                }
+//                out<<"\r\n";
+//            }
+    //****************************************************************//
+
+
+    //更新距离位置
+    //Fake_Dist_Car 比Dist_Car 晚一步， Dist_Car得到Cor_Car（当前步）来判断碰撞，Fake_Dist_Car得到Fake_Cor_Car来输入学生端
+
+    Fake_Dist_Car = Dist_Car;
+    Dist_Car = update_position(V_Car_real,Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR,t_paint);
+
+
+
+    //新距离转换到新坐标
+    Cor_Car = dist2cor(Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);
+
+    //画车的位置
+    for (int i=0;i<8;i++){
+        p->drawEllipse(QPoint(Cor_Car[i][1],Cor_Car[i][2]),10,10);
+    }
+
+    //判断有没有撞
+    //int flag=0;
+
+//    flag = collision_info(Dist_Car,V_Car);
+    //*********************inline
+    int collision = 0;
+
+    //大圈内部是否发生追尾
+    double *Dist1 = new double[2];
+    double *Dist2 = new double[2];
+    double dist_temp;
+    double f_thresh_base = 20;
+    double f_thresh = 0;//等于f_thresh_base加上一个和速度有关的
+    double b_thresh = 15;
+    double cf_thresh = 0;//前后跟车的最小距离，V<80是35，V>=80是45
+    double *Dist_Forward = new double[2];
+    double *Dist_Backward = new double[2];
+    double *Dist_Big = new double[2];
+    double *Dist_Small = new double[2];
+    int flag = 0;
+    int idx_big = 1;
+    int idx_small = 1;
+    int idx_forward = 1;
+    int idx_backward = 1;
+    for (int i=0;i<4;i++)
+    {
+        for (int j=0;j<4;j++)
+        {
+            if (i>j)
+            {
+                Dist1[0] = i;
+                Dist2[0] = j;
+                Dist1[1] = Dist_Car[i];
+                Dist2[1] = Dist_Car[j];
+                if(Dist1[1]>=Dist2[1]) {
+                    Dist_Big = Dist1;
+                    Dist_Small = Dist2;
+                    idx_big = i;
+                    idx_small = j;
+                }
+                else {
+                    Dist_Big = Dist2;
+                    Dist_Small = Dist1;
+                    idx_big = j;
+                    idx_small = i;
+                }
+                if ((Dist_Big[1]-Dist_Small[1])<=(OutDistDownLeft_1_End-(Dist_Big[1]-Dist_Small[1]))){
+                    Dist_Forward = Dist_Big;
+                    Dist_Backward = Dist_Small;
+                    idx_forward = idx_big;
+                    idx_backward = idx_small;
+                    dist_temp = Dist_Big[1]-Dist_Small[1];
+                }
+                else {
+                    Dist_Forward = Dist_Small;
+                    Dist_Backward = Dist_Big;
+                    idx_forward = idx_small;
+                    idx_backward = idx_big;
+                    dist_temp = OutDistDownLeft_1_End-(Dist_Big[1]-Dist_Small[1]);
+                }
+                if(V_Car[idx_backward][1]<80){
+                    cf_thresh = 35;
+                }
+                else{cf_thresh = 45;}
+                if (dist_temp < cf_thresh)
+                {
+                    collision = 1;
+                    p->setBrush(Qt::white);
+                    p->setPen(Qt::white);
+                    p->drawEllipse(QPoint(Cor_Car[i][1],Cor_Car[i][2]),10,10);
+                    p->drawEllipse(QPoint(Cor_Car[j][1],Cor_Car[j][2]),10,10);
+                    ////**看相撞时的position
+                    //cout<<"i="<<i<<" j="<<j<<endl<<"  dist= "<<dist<<endl;
+                    //cout<<"Position_"<<i<<" X="<<x1<<" Y="<<y1<<endl;
+                    //cout<<"Position_"<<j<<" X="<<x2<<" Y="<<y2<<endl<<endl;
+                    ////**
+                    break;
+                }
+            }
+        }
+    }
+    //小圈内部是否发生追尾
+
+    for (int i=4;i<8;i++)
+    {
+        for (int j=4;j<8;j++)
+        {
+            if (i>j)
+            {
+                Dist1[0] = i;
+                Dist2[0] = j;
+                Dist1[1] = Dist_Car[i];
+                Dist2[1] = Dist_Car[j];
+                if(Dist1[1]>=Dist2[1]) {
+                    Dist_Big = Dist1;
+                    Dist_Small = Dist2;
+                    idx_big = i;
+                    idx_small = j;
+                }
+                else {
+                    Dist_Big = Dist2;
+                    Dist_Small = Dist1;
+                    idx_big = j;
+                    idx_small = i;
+                }
+                if ((Dist_Big[1]-Dist_Small[1])<=(InDistDownLeft_1_End-(Dist_Big[1]-Dist_Small[1]))){
+                    Dist_Forward = Dist_Big;
+                    Dist_Backward = Dist_Small;
+                    idx_forward = idx_big;
+                    idx_backward = idx_small;
+                    dist_temp = Dist_Big[1]-Dist_Small[1];
+                }
+                else {
+                    Dist_Forward = Dist_Small;
+                    Dist_Backward = Dist_Big;
+                    idx_forward = idx_small;
+                    idx_backward = idx_big;
+                    dist_temp = InDistDownLeft_1_End-(Dist_Big[1]-Dist_Small[1]);
+                }
+                if(V_Car[idx_backward][1]<80){
+                    cf_thresh = 35;
+                }
+                else{cf_thresh = 45;}
+                if (dist_temp < cf_thresh)
+                {
+                    collision = 1;
+                    NUM_COLLISION = NUM_COLLISION + 1;
+                    p->setBrush(Qt::white);
+                    p->setPen(Qt::white);
+                    p->drawEllipse(QPoint(Cor_Car[i][1],Cor_Car[i][2]),10,10);
+                    p->drawEllipse(QPoint(Cor_Car[j][1],Cor_Car[j][2]),10,10);
+                    ////**看相撞时的position
+                    //cout<<"i="<<i<<" j="<<j<<endl<<"  dist= "<<dist<<endl;
+                    //cout<<"Position_"<<i<<" X="<<x1<<" Y="<<y1<<endl;
+                    //cout<<"Position_"<<j<<" X="<<x2<<" Y="<<y2<<endl<<endl;
+                    ////**
+                    break;
+                }
+            }
+        }
+    }
+    //给Cell_Point加tag，通过两个方向tag的比较可以判断是否相撞S
+    p->setBrush(Qt::blue);
+    p->setPen(Qt::blue);
+    for (int i=0;i<16;i++){
+        //竖的方向
+
+        if (Cell_Point[i][0] == 0){
+            for (int j=4;j<8;j++){
+                dist_temp = Cell_Point[i][1]-Dist_Car[j];
+                if (V_Car[j][1]<80){
+                    f_thresh = f_thresh_base+35;
+                }
+                else{
+                    f_thresh = f_thresh_base+45;
+                }
+                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                {
+                    flag = 1;
+
+                }
+            }
+        }//小圈
+        else{
+            for (int j=0;j<4;j++){
+                dist_temp = Cell_Point[i][1] - Dist_Car[j];
+                if (V_Car[j][1]<80){
+                    f_thresh = f_thresh_base+35;
+                }
+                else{
+                    f_thresh = f_thresh_base+45;
+                }
+                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh)){
+                  {
+                        flag = 1;
+
+                    }
+
+                }
+            }
+        }
+        if (flag==1){
+           Cell_Point[i][2] = 1;
+          // p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),5,5);
+           flag = 0;
+        }
+        else{
+            Cell_Point[i][2] = 0;
+        }
+
+        //横的方向
+        if (Cell_Point[i][3] == 0){
+            for (int j=4;j<8;j++){
+                dist_temp = Cell_Point[i][4]-Dist_Car[j];
+                if (V_Car[j][1]<80){
+                    f_thresh = f_thresh_base+35;
+                }
+                else{
+                    f_thresh = f_thresh_base+45;
+                }
+                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                    flag = 1;
+
+            }
+        }//小圈
+        else{
+            for (int j=0;j<4;j++){
+                dist_temp = Cell_Point[i][4] - Dist_Car[j];
+                if (V_Car[j][1]<80){
+                    f_thresh = f_thresh_base+35;
+                }
+                else{
+                    f_thresh = f_thresh_base+45;
+                }
+                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                    flag = 1;
+
+            }
+        }
+
+        if (flag==1){
+           Cell_Point[i][5] = 1;
+          // p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),5,5);
+           flag = 0;
+        }
+        else{
+            Cell_Point[i][5] = 0;
+        }
+    }
+
+
+    //判断是否相撞
+    for (int i=0;i<16;i++){
+        if ( (Cell_Point[i][2] == 1) & (Cell_Point[i][5] == 1) ) {
+            collision = 1;
+            //qDebug()<<i<<endl;
+            //qDebug()<<Cell_Point[i][0]<<Cell_Point[i][1]<<Cell_Point[i][2]<<Cell_Point[i][3]<<Cell_Point[i][4]<<Cell_Point[i][5];
+            p->setBrush(Qt::yellow);
+            p->setPen(Qt::yellow);
+            p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),10,10);
+            NUM_COLLISION = NUM_COLLISION + 1;
+            }
+    }
+    //**********************inline
+
+//    if (collision == 1){
+//        timer->stop();
+//    }
+
+//    p->restore();
+
+
+}
+
+
+
