@@ -13,7 +13,7 @@
 #include <iostream>
 #include <stdio.h>
 
-
+#include "mainwindow.h"
 
 
 Map::Map(QWidget *parent) :
@@ -32,6 +32,7 @@ Map::Map(QWidget *parent) :
     resize(1000, 1000);
     ACCLERATE = 1.3;//最大减速度
     NUM_COLLISION = 0;//碰撞次数
+    NUM_PASS = 0;//通过次数
     Dist_Car = new double[8];
     Fake_Dist_Car = new double[8];
     V_Car = new double*[8];
@@ -233,6 +234,32 @@ Map::Map(QWidget *parent) :
 //    }
 
 
+    //碰撞状态记录的初始化
+    record_pass = new int*[8];
+    record_collision_cross = new int*[16];
+    record_collision_front_old = new int*[8];
+    record_collision_front_new = new int*[8];
+
+    for (int i=0;i<8;i++){
+        record_pass[i] = new int[2];
+        record_pass[i][0] = 0;
+        record_pass[i][1] = 0;
+
+        record_collision_front_new[i] = new int[8];
+        record_collision_front_old[i] = new int[8];
+        for (int j=0;j<8;j++){
+            record_collision_front_new[i][j] = 0;
+            record_collision_front_old[i][j] = 0;
+        }
+    }
+
+    for (int i=0;i<16;i++){
+        record_collision_cross[i] = new int[2];
+        record_collision_cross[i][0] = 0;
+        record_collision_cross[i][1] = 0;
+    }
+
+
 }
 
 
@@ -248,6 +275,11 @@ void Map::end_game(){
 int Map::show_num_collision(){
     return NUM_COLLISION;
 }
+
+int Map::show_num_pass(){
+    return NUM_PASS;
+}
+
 void Map::paintEvent(QPaintEvent *event)
 {
     QPainter p(this);
@@ -339,6 +371,7 @@ void Map::drawcircles(QPainter *p)
     }
     p->setBrush(Qt::red);
     p->setPen(Qt::red);
+
     //距离转换到坐标
     double ** Cor_Car;
     double ** Fake_Cor_Car;
@@ -348,6 +381,21 @@ void Map::drawcircles(QPainter *p)
     Fake_Cor_Car = Cor_Car;//初始化
     Cor_Car = dist2cor(Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);
     Fake_Cor_Car = dist2cor(Fake_Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);//赋值
+    //由距离判断是否通过cross区域
+        //首先把改状态更新 相当于pop up
+    for (int i = 0;i<8;i++){
+        record_pass[i][0] = record_pass[i][1];
+    }
+
+        //然后通过坐标来判断是否在区域内
+    for (int i = 0;i<8;i++){
+        if (Cor_Car[i][1]>=InCorDownLeft_1_X & Cor_Car[i][1]<=InCorDownRight_8_X & Cor_Car[i][2]>=InCorUpRight_8_Y & Cor_Car[i][2]<=InCorDownRight_1_Y){
+            record_pass[i][1] = 1;
+        }
+        else{
+            record_pass[i][1] = 0;
+        }
+    }
 
     //给Fake_Cor_Car加上噪声信号
     for (int i=0;i<8;i++){
@@ -433,8 +481,19 @@ void Map::drawcircles(QPainter *p)
     int idx_small = 1;
     int idx_forward = 1;
     int idx_backward = 1;
+
+
+    //********************判断碰撞******************************
+    //碰撞更新 相当于pop up
+    for (int i=0;i<8;i++){
+        for (int j=0;j<8;j++){
+            record_collision_front_old[i][j] = record_collision_front_new[i][j];
+        }
+    }
+
     for (int i=0;i<4;i++)
-    {
+    {                
+        //判断碰撞
         for (int j=0;j<4;j++)
         {
             if (i>j)
@@ -485,7 +544,12 @@ void Map::drawcircles(QPainter *p)
                     //cout<<"Position_"<<i<<" X="<<x1<<" Y="<<y1<<endl;
                     //cout<<"Position_"<<j<<" X="<<x2<<" Y="<<y2<<endl<<endl;
                     ////**
-                    break;
+
+                    //记录碰撞状态
+                    record_collision_front_new[i][j] = 1;
+                }
+                else{
+                    record_collision_front_new[i][j] = 0;
                 }
             }
         }
@@ -535,7 +599,6 @@ void Map::drawcircles(QPainter *p)
                 if (dist_temp < cf_thresh)
                 {
                     collision = 1;
-                    NUM_COLLISION = NUM_COLLISION + 1;
                     p->setBrush(Qt::white);
                     p->setPen(Qt::white);
                     p->drawEllipse(QPoint(Cor_Car[i][1],Cor_Car[i][2]),10,10);
@@ -545,7 +608,10 @@ void Map::drawcircles(QPainter *p)
                     //cout<<"Position_"<<i<<" X="<<x1<<" Y="<<y1<<endl;
                     //cout<<"Position_"<<j<<" X="<<x2<<" Y="<<y2<<endl<<endl;
                     ////**
-                    break;
+                    record_collision_front_new[i][j] = 1;
+                }
+                else{
+                    record_collision_front_new[i][j] = 0;
                 }
             }
         }
@@ -642,6 +708,10 @@ void Map::drawcircles(QPainter *p)
 
     //判断是否相撞
     for (int i=0;i<16;i++){
+        //把碰撞状态更新 相当于pop up
+        record_collision_cross[i][0] = record_collision_cross[i][1];
+
+        //判断碰撞
         if ( (Cell_Point[i][2] == 1) & (Cell_Point[i][5] == 1) ) {
             collision = 1;
             //qDebug()<<i<<endl;
@@ -649,17 +719,39 @@ void Map::drawcircles(QPainter *p)
             p->setBrush(Qt::yellow);
             p->setPen(Qt::yellow);
             p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),10,10);
-            NUM_COLLISION = NUM_COLLISION + 1;
+
+            //把碰撞状态记录下来
+            record_collision_cross[i][1] = 1;
             }
+        else{
+            record_collision_cross[i][1] = 0;
+        }
     }
-    //**********************inline
 
-//    if (collision == 1){
-//        timer->stop();
-//    }
+    //碰撞次数更新
+    for (int i=0;i<16;i++){
+        if( (record_collision_cross[i][0] == 0)&(record_collision_cross[i][1] == 1)){
+            NUM_COLLISION = NUM_COLLISION + 1;
+        }
+    }
 
-//    p->restore();
+    for (int i=0;i<8;i++){
+        for (int j=0;j<8;j++){
+            if (i>j){
+                if((record_collision_front_old[i][j] == 0)&(record_collision_front_new[i][j] == 1)){
+                    NUM_COLLISION = NUM_COLLISION +1;
+                }
+            }
+        }
+    }
 
+    //通过次数更新
+    for (int i=0;i<8;i++){
+
+        if (record_pass[i][0] == 1 & record_pass[i][1] == 0){
+            NUM_PASS = NUM_PASS + 1;
+        }
+    }
 
 }
 

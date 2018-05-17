@@ -25,6 +25,7 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double ID_2 = StudentIN[1][0];//第二辆小车的ID
     double x_2 = StudentIN[1][1];//第二辆小车的横坐标
     double y_2 = StudentIN[1][2];//第二辆小车的纵坐标
+
     double ID_3 = StudentIN[2][0];//第三辆小车的ID
     double x_3 = StudentIN[2][1];//第三辆小车的横坐标
     double y_3 = StudentIN[2][2];//第三辆小车的纵坐标
@@ -49,21 +50,14 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double x_8 = StudentIN[7][1];//第八辆小车的横坐标
     double y_8 = StudentIN[7][2];//第八辆小车的纵坐标
     //***************决策程序修改开始位置*************//
-     StudentOUT[0][0] = ID_1;
-     StudentOUT[1][0] = ID_2;
-     StudentOUT[2][0] = ID_3;
-     StudentOUT[3][0] = ID_4;
-     StudentOUT[4][0] = ID_5;
-     StudentOUT[5][0] = ID_6;
-     StudentOUT[6][0] = ID_7;
-     StudentOUT[7][0] = ID_8;
+
+
 
 
 
 
   //***************决策程序修改结束位置*************//
-     return StudentOUT;
-
+    return StudentOUT;
 }
 
 double interp(double PWM_In){

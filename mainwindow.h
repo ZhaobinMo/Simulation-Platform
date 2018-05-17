@@ -18,6 +18,7 @@ public:
     ~MainWindow();
 protected slots:
     void count_num_collision();
+    void count_num_pass();
     void show_time();
 
 private slots:
@@ -30,10 +31,9 @@ private:
     Ui::MainWindow *ui;
     Initail_Dlg my2;
     Map map;
-    int sum_time = 5;//倒计时
-    int ** record_pass;//记录通过次数 8x2 两列分别表示更新前后# 1表示在cross 0表示不在  #第一列为1 第二列为0 记一次通过
-    int ** record_collision;//记录碰撞次数 8x2 前后表示碰撞状态# 1表碰撞 0表正常 #第一列为0 第二列为1 记一次碰撞
+    int sum_time = 240;//倒计时
     QTimer *timer_count_down;
+    QTimer *timer_showLCD;
     int click_start_time =0;
 };
 
