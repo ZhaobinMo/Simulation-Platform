@@ -619,9 +619,9 @@ double ** func_tag_v_main(double**V_Car, double* Dist_Car){
 }
 double ** func_real_v(double **V_Car_real, double **V_Car, double ACCLERATE){
     for (int i=0;i<8;i++){
-        V_Car_real[i][0] = V_Car_real[i][0] + func_sgn( V_Car[i][0] - V_Car_real[i][0] )
-                *func_min( (V_Car[i][0] - V_Car_real[i][0]) * func_sgn(V_Car[i][0] - V_Car_real[i][0])/t_paint,ACCLERATE )*t_paint;
-        V_Car_real[i][1] = V_Car[i][1];
+        V_Car_real[i][1] = V_Car_real[i][1] + func_sgn( V_Car[i][1] - V_Car_real[i][1] )
+                *func_min( (V_Car[i][1] - V_Car_real[i][1]) * func_sgn(V_Car[i][1] - V_Car_real[i][1])/t_paint,ACCLERATE*100/1000 )*t_paint;
+        V_Car_real[i][0] = V_Car[i][0];
     }
     return V_Car_real;
 }
