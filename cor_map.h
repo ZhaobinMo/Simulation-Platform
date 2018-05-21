@@ -9,6 +9,7 @@ float PI = 3.1415926;//acos(-1.0);
  double t_paint = t_update / 2;//ms
  double t_delay = t_update+30.0;
  int count = 0; // 用来在画图循环里面自增用的
+ int count_all = 0;// 用来停止循环的，因为用时间的话不准，4min对应7164次循环
  int NUM_BIG_CAR = 4;
  int NUM_SUM_CAR = 8;
  double vers = -1;

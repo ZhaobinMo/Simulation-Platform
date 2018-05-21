@@ -22,15 +22,18 @@ Map::Map(QWidget *parent) :
 {
     ui->setupUi(this);
     timer = new QTimer(this);
+
 //    id_delay = startTimer(t_delay);
 //    id_display = startTimer(t_update);
     timer->start(t_paint);//  67/2 ms
+
     connect(timer,SIGNAL(timeout()),this,SLOT(update()));
+
 
 
     setWindowTitle("The Map");
     resize(1000, 1000);
-    ACCLERATE = 1.3;//最大减速度
+    ACCLERATE = 1.30000000;//最大减速度
     NUM_COLLISION = 0;//碰撞次数
     NUM_PASS = 0;//通过次数
     Dist_Car = new double[8];
@@ -276,6 +279,8 @@ int Map::show_num_collision(){
     return NUM_COLLISION;
 }
 
+
+
 int Map::show_num_pass(){
     return NUM_PASS;
 }
@@ -366,6 +371,7 @@ void Map::drawmap(QPainter *p)
 void Map::drawcircles(QPainter *p)
 {
     count++;
+    count_all++;
     if (count>1){
         count = count - 2;
     }
@@ -438,6 +444,19 @@ void Map::drawcircles(QPainter *p)
 //                }
 //                out<<"\r\n";
 //            }
+
+    //都记录在一个.txt文件中
+
+    QFile data("file.txt");
+    if (data.open(QFile::WriteOnly | QIODevice::Append)) {
+        QTextStream out(&data);
+        for (int i=0;i<8;i++){
+            for (int j=0;j<2;j++){
+                out << V_Car_real[i][j] <<"\t";
+            }
+        }
+        out<<"\r\n";
+    }
     //****************************************************************//
 
 
@@ -753,6 +772,11 @@ void Map::drawcircles(QPainter *p)
         }
     }
 
+    //判断是否到时间
+    qDebug()<<count_all;
+    if (count_all == 7164){
+        end_game();
+    }
 }
 
 

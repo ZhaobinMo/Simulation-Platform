@@ -65,6 +65,6 @@ void MainWindow::show_time(){
     }
     else{
         timer_count_down->stop();
-        map.end_game();
+        //map.end_game();
     }
 }
