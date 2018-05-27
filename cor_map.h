@@ -10,6 +10,8 @@ float PI = 3.1415926;//acos(-1.0);
  double t_delay = t_update+30.0;
  int count = 0; // 用来在画图循环里面自增用的
  int count_all = 0;// 用来停止循环的，因为用时间的话不准，4min对应7164次循环
+ int count_file = 0;//用来记录txt
+ int count_limit = 7164;
  int NUM_BIG_CAR = 4;
  int NUM_SUM_CAR = 8;
  double vers = -1;
@@ -19,6 +21,8 @@ float PI = 3.1415926;//acos(-1.0);
  double OutBridge = 40;
  double r = 70;
  double InBridge = 120;//1320
+
+
 
 //控制点距离
 //大圈

@@ -2,7 +2,6 @@
 #define MOVING_H
 
 #include "cor_map.h"
-#include "math.h"
 #include<QDebug>
 #include<QTime>
 #include <cstdlib>
@@ -52,263 +51,156 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double y_8 = StudentIN[7][2];//第八辆小车的纵坐标
     //***************决策程序修改开始位置*************//
 
-    double t = (double) clock();
-    double time = t/CLOCKS_PER_SEC;
-    double Vmax=70;
-    double Va=80;
-    double t1=6;
- /*t1需要针对不同类型电脑进行修改，windows系统设置为6左右，mac设置为1.5左右*/
+         StudentOUT[0][0] = ID_1;
+         StudentOUT[1][0] = ID_2;
+         StudentOUT[2][0] = ID_3;
+         StudentOUT[3][0] = ID_4;
+         StudentOUT[4][0] = ID_5;
+         StudentOUT[5][0] = ID_6;
+         StudentOUT[6][0] = ID_7;
+         StudentOUT[7][0] = ID_8;
 
-    StudentOUT[0][0] = ID_1;
-    StudentOUT[1][0] = ID_2;
-    StudentOUT[2][0] = ID_3;
-    StudentOUT[3][0] = ID_4;
-    StudentOUT[4][0] = ID_5;
-    StudentOUT[5][0] = ID_6;
-    StudentOUT[6][0] = ID_7;
-    StudentOUT[7][0] = ID_8;
+         double deta_v = 15;
+        //起步时要延迟，拉开距离
 
-    // StudentOUT[5][1] =0;//6车
-    // StudentOUT[7][1] =0;//8车
-    // StudentOUT[4][1] =103;//5车
-    // StudentOUT[6][1] =103;//7车
+         if(x_4<-16&&x_4>-24&&y_4<-196&&y_4>-204&&x_8<-56&&x_8>-64&&y_8<-196&&y_8>-204&&x_2<24&&x_2>16&&y_2<204&&y_2>196\
+                 &&x_6<64&&x_6>56&&y_6<204&&y_6>196&&x_3>-200&x_7>-200){
+               StudentOUT[3][1] = 0;
+               StudentOUT[7][1] = 0;
+               StudentOUT[1][1] = 0;
+               StudentOUT[5][1] = 0;
+               StudentOUT[2][1] = 103;
+               StudentOUT[6][1] = 103;
+               StudentOUT[0][1] = 103;
+               StudentOUT[4][1] = 103;
+         }
+         else{
+             for(int number=5;number<=8;number++){
+                 if(StudentIN[number-1][1]<-150||StudentIN[number-1][1]>150||StudentIN[number-1][2]<-200||StudentIN[number-1][2]>200){
+                     StudentOUT[number-1][1] = 80;
+                 }
+                 else{StudentOUT[number-1][1] = 103;}
+             }
+              StudentOUT[0][1] = 103;
+              StudentOUT[1][1] = 103;
+              StudentOUT[2][1] = 103;
+              StudentOUT[3][1] = 103;
+          }
 
-    StudentOUT[0][1] =103;//1车
-    StudentOUT[2][1] =103;//3车
+    //    //保持内外圈两小车同步，相距不要太大
+        for(int number=0;number<4;number++){
+            if(sqrt(pow(StudentIN[number][1]-StudentIN[number+4][1],2)+pow(StudentIN[number][2]-StudentIN[number+4][2],2))>50){
+                StudentOUT[number+4][1] -= 10;
+            }
+        }
 
-    /*车并行调整代码*/
-    /*1车5车调整代码*/
-    if((y_1>=-200 && y_1<=-60 && x_1<=-20 && x_1>=-60)&&
-       (y_5>=-200 && y_5<=-60 && x_5<=-20 && x_5>=-60)){
-       double d=y_1-y_5;
-       if(d>=20) {StudentOUT[0][1] =Va;}
-       if(d<=-20){StudentOUT[4][1] =Va;}}
 
-    if((y_1>=60   && y_1<=200 && x_1<=-20 && x_1>=-60)&&
-       (y_5>=60   && y_5<=200 && x_5<=-20 && x_5>=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
 
-    if((y_1>=-200 && y_1<=-60 && x_1>=20  && x_1<=60)&&
-       (y_5>=-200 && y_5<=-60 && x_5>=20  && x_5<=60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
+         //**避免十字路口碰撞
+         //8/4与3/7在左上相遇
+         if(y_3<-16&&y_3>-24&&y_7>-64&&y_7<-56&&x_3>-70&&x_7>-70&&x_8<-56&&x_8>-64&&x_4<-16&&x_4>-24&&y_4<-50&&y_8<-50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         //8/4与3/7在左下相遇
+         else if(x_3<-16&&x_3>-24&&x_7<-56&&x_7>-64&&y_3<70&&y_7<70&&y_4<24&&y_4>16&&y_8<64&&y_8>56&&x_4<-50&&x_8<-50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         //8/4与3/7在右下相遇
+         else if(y_3<24&&y_3>16&&y_7>56&&y_7<64&&x_7<70&&x_3<70&&x_8<64&&x_8>56&&x_4<24&&x_4>16&&y_4>50&&y_8>50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         //8/4与3/7在右上相遇
+         else if(x_3<24&&x_3>16&&x_7<64&&x_7>56&&y_3>-70&&y_7>-70&&y_4<-16&&y_4>-24&&y_8<-56&&y_8>-64&&x_4>50&&x_8>50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         else{;
+         }
 
-    if((y_1>=60   && y_1<=200 && x_1>=20  && x_1<=60 )&&
-       (y_5>=60   && y_5<=200 && x_5>=20  && x_5<=60 )){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
+        //1/5与2/6在右下相遇
+         if(y_1<24&&y_1>16&&y_5<64&&y_5>56&&x_1<70&&x_5<70&&x_2>16&&x_2<24&&x_6<64&&x_6>56&&y_2>50&&y_6>50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         //1/5与2/6在右上角相遇
+         else if(x_1<24&&x_1>16&&x_5<64&&x_5>56&&y_1>-70&&y_5>-70&&y_2<-16&&y_2>-24&&y_6<-56&&y_6>-64&&x_2>50&&x_6>50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         //1/5与2/6在左上角相遇
+         else if(y_1<-16&&y_1>-24&&y_5<-56&&y_5>-64&&x_1>-70&&x_5>-70&&x_2>-24&&x_2<-16&&x_6<-56&&x_6>-64&&y_2<-50&&y_6<-50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+        //1/5与2/6在左下角相遇
+         else if(x_1<-16&&x_1>-24&&x_5<-56&&x_5>-64&&y_1<70&&y_5<70&&y_2<24&&y_2>16&&y_6<64&&y_6>56&&x_2<-50&&x_6<-50){
+             StudentOUT[3][1] -= deta_v;
+             StudentOUT[7][1] -= deta_v;
+         }
+         else{;
+         }
 
-    if((y_1>=-60  && y_1<=-20 && x_1>=-150&& x_1<=-60)&&
-       (y_5>=-60  && y_5<=-20 && x_5>=-150&& x_5<=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
-    if((y_1>=20   && y_1<=60  && x_1>=60  && x_1<=150)&&
-       (y_5>=20   && y_5<=60  && x_5>=60  && x_5<=150)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
-    if((y_1>=-60  && y_1<=-20 && x_1>=60  && x_1<=150)&&
-       (y_5>=-60  && y_5<=-20 && x_5>=60  && x_5<=150)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
-    if((y_1>=20   && y_1<=60  && x_1>=-150&& x_1<=-60)&&
-       (y_5>=20   && y_5<=60  && x_5>=-150&& x_5<=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
-    /*2车、6车并行*/
-    if((y_2>=-200 && y_2<=-60 && x_2<=-20 && x_2>=-60)&&
-       (y_6>=-200 && y_6<=-60 && x_6<=-20 && x_6>=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
+         //***避免追尾
+        //1追2尾
+         if((abs(x_1)+abs(y_1))>80&&(abs(x_2)+abs(y_2))>80&&sqrt(pow(x_1-x_2,2)+pow(y_1-y_2,2))<70){
+            StudentOUT[0][1] -= deta_v;
+         }
+         else if(((x_1<64&&x_1>56&&x_2<64&&x_2>56)||(x_1<-56&&x_1>-64&&x_2<-56&&x_2>-64))\
+                 &&sqrt(pow(x_1-x_2,2)+pow(y_1-y_2,2))<70){
+            StudentOUT[0][1] -= deta_v;
+         }
+         else if(((y_1<64&&y_1>56&&y_2<64&&y_2>56)||(y_1<-56&&y_1>-64&&y_2<-56&&y_2>-64))\
+                 &&sqrt(pow(x_1-x_2,2)+pow(y_1-y_2,2))<70){
+            StudentOUT[0][1] -= deta_v;
+         }
+         else{;}
 
-    if((y_2>=60   && y_2<=200 && x_2<=-20 && x_2>=-60)&&
-       (y_6>=60   && y_6<=200 && x_6<=-20 && x_6>=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
+         //3追4
+         if((abs(x_3)+abs(y_3))>80&&(abs(x_4)+abs(y_4))>80&&sqrt(pow(x_3-x_4,2)+pow(y_3-y_4,2))<70){
+            StudentOUT[2][1] -= deta_v;
+         }
+         else if(((x_3<64&&x_3>56&&x_4<64&&x_4>56)||(x_3<-56&&x_3>-64&&x_3<-56&&x_3>-64))\
+                 &&sqrt(pow(x_3-x_4,2)+pow(y_3-y_4,2))<70){
+            StudentOUT[2][1] -= deta_v;
+         }
+         else if(((y_3<64&&y_3>56&&y_4<64&&y_4>56)||(y_3<-56&&y_3>-64&&y_4<-56&&y_4>-64))\
+                 &&sqrt(pow(x_3-x_4,2)+pow(y_3-y_4,2))<70){
+            StudentOUT[2][1] -= deta_v;
+         }
+         else{;}
 
-    if((y_2>=-200 && y_2<=-60 && x_2>=20  && x_2<=60)&&
-       (y_6>=-200 && y_6<=-60 && x_6>=20  && x_6<=60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
+         //5追6
+         if((abs(x_5)+abs(y_5))>80&&(abs(x_6)+abs(y_6))>80&&sqrt(pow(x_5-x_6,2)+pow(y_5-y_6,2))<70){
+            StudentOUT[4][1] -= deta_v;
+         }
+         else if(((x_5<24&&x_5>16&&x_6<24&&x_6>16)||(x_5<-16&&x_5>-24&&x_6<-16&&x_6>-24))\
+                 &&sqrt(pow(x_5-x_6,2)+pow(y_5-y_6,2))<70){
+            StudentOUT[4][1] -= deta_v;
+         }
+         else if(((y_5<24&&y_5>16&&y_6<24&&y_6>16)||(y_5<-16&&y_5>-24&&y_6<-16&&y_6>-24))\
+                 &&sqrt(pow(x_5-x_6,2)+pow(y_5-y_6,2))<70){
+            StudentOUT[4][1] -= deta_v;
+         }
+         else{;}
 
-    if((y_2>=60   && y_2<=200 && x_2>=20  && x_2<=60 )&&
-       (y_6>=60   && y_6<=200 && x_6>=20  && x_6<=60 )){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
+         //7追8
+         if((abs(x_7)+abs(y_7))>80&&(abs(x_8)+abs(y_8))>80&&sqrt(pow(x_7-x_8,2)+pow(y_7-y_8,2))<70){
+            StudentOUT[6][1] -= deta_v;
+         }
+         else if(((x_7<24&&x_7>16&&x_8<24&&x_8>16)||(x_7<-16&&x_7>-24&&x_8<-16&&x_8>-24))\
+                 &&sqrt(pow(x_7-x_8,2)+pow(y_7-y_8,2))<70){
+            StudentOUT[6][1] -= deta_v;
+         }
+         else if(((y_7<24&&y_7>16&&y_8<24&&y_8>16)||(y_7<-16&&y_7>-24&&y_8<-16&&y_8>-24))\
+                 &&sqrt(pow(x_7-x_8,2)+pow(y_7-y_8,2))<70){
+            StudentOUT[6][1] -= deta_v;
+         }
+         else{;}
 
-    if((y_2>=-60  && y_2<=-20 && x_2>=-150&& x_2<=-60)&&
-       (y_6>=-60  && y_6<=-20 && x_6>=-150&& x_6<=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
-    if((y_2>=20   && y_2<=60  && x_2>=60  && x_2<=150)&&
-       (y_6>=20   && y_6<=60  && x_6>=60  && x_6<=150)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
-    if((y_2>=-60  && y_2<=-20 && x_2>=60  && x_2<=150)&&
-       (y_6>=-60  && y_6<=-20 && x_6>=60  && x_6<=150)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
-    if((y_2>=20   && y_2<=60  && x_2>=-150&& x_2<=-60)&&
-       (y_6>=20   && y_6<=60  && x_6>=-150&& x_6<=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
-    /*3车、7车并行*/
-    if((y_3>=-200 && y_3<=-60 && x_3<=-20 && x_3>=-60)&&
-       (y_7>=-200 && y_7<=-60 && x_7<=-20 && x_7>=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
 
-    if((y_3>=60   && y_3<=200 && x_3<=-20 && x_3>=-60)&&
-       (y_7>=60   && y_7<=200 && x_7<=-20 && x_7>=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
-
-    if((y_3>=-200 && y_3<=-60 && x_3>=20  && x_3<=60)&&
-       (y_7>=-200 && y_7<=-60 && x_7>=20  && x_7<=60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-
-    if((y_3>=60   && y_3<=200 && x_3>=20  && x_3<=60 )&&
-       (y_7>=60   && y_7<=200 && x_7>=20  && x_7<=60 )){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-
-    if((y_3>=-60  && y_3<=-20 && x_3>=-150&& x_3<=-60)&&
-       (y_7>=-60  && y_7<=-20 && x_7>=-150&& x_7<=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
-    if((y_3>=20   && y_3<=60  && x_3>=60  && x_3<=150)&&
-       (y_7>=20   && y_7<=60  && x_7>=60  && x_7<=150)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-    if((y_3>=-60  && y_3<=-20 && x_3>=60  && x_3<=150)&&
-       (y_7>=-60  && y_7<=-20 && x_7>=60  && x_7<=150)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
-    if((y_3>=20   && y_3<=60  && x_3>=-150&& x_3<=-60)&&
-       (y_7>=20   && y_7<=60  && x_7>=-150&& x_7<=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-    /*4车、8车并行*/
-    if((y_4>=-200 && y_4<=-60 && x_4<=-20 && x_4>=-60)&&
-       (y_8>=-200 && y_8<=-60 && x_8<=-20 && x_8>=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-
-    if((y_4>=60   && y_4<=200 && x_4<=-20 && x_4>=-60)&&
-       (y_8>=60   && y_8<=200 && x_8<=-20 && x_8>=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-
-    if((y_4>=-200 && y_4<=-60 && x_4>=20  && x_4<=60)&&
-       (y_8>=-200 && y_8<=-60 && x_8>=20  && x_8<=60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-
-    if((y_4>=60   && y_4<=200 && x_4>=20  && x_4<=60 )&&
-       (y_8>=60   && y_8<=200 && x_8>=20  && x_8<=60 )){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-
-    if((y_4>=-60  && y_4<=-20 && x_4>=-150&& x_4<=-60)&&
-       (y_8>=-60  && y_8<=-20 && x_8>=-150&& x_8<=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-    if((y_4>=20   && y_4<=60  && x_4>=60  && x_4<=150)&&
-       (y_8>=20   && y_8<=60  && x_8>=60  && x_8<=150)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-    if((y_4>=-60  && y_4<=-20 && x_4>=60  && x_4<=150)&&
-       (y_8>=-60  && y_8<=-20 && x_8>=60  && x_8<=150)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-    if((y_4>=20   && y_4<=60  && x_4>=-150&& x_4<=-60)&&
-       (y_8>=20   && y_8<=60  && x_8>=-150&& x_8<=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-
-    /***5号车决策程序***/
-    if((x_5>=150 && y_5>=60 && y_5<=270)  ||
-       (y_5>=200 && x_5>=60 && x_5<=270)  ||
-       (x_5>=150 && y_5>=-270 && y_5<=-60)||
-       (y_5<=-200 && x_5>=60 && x_5<=270) ||
-       (x_5<=-150 && y_5<=-60&&y_5>=-270) ||
-       (y_5<=-200 && x_5>=-150 && x_5<=60)||
-       (x_5<=-150 && y_5<=270 && y_5>=60) ||
-       (y_5>=200 && x_5>=-150 && x_5<=-60))
-    {StudentOUT[4][1] =Vmax;}
-    else{StudentOUT[4][1] =103;}
-
-    /***7号车决策程序***/
-    if((x_7>=150 && y_7>=60 && y_7<=270)  ||
-       (y_7>=200 && x_7>=60 && x_7<=270)  ||
-       (x_7>=150 && y_7>=-270 && y_7<=-60)||
-       (y_7<=-200 && x_7>=60 && x_7<=270) ||
-       (x_7<=-150 && y_7<=-60&&y_7>=-270) ||
-       (y_7<=-200 && x_7>=-150 && x_7<=60)||
-       (x_7<=-150 && y_7<=270 && y_7>=60) ||
-       (y_7>=200 && x_7>=-150 && x_7<=-60))
-    {StudentOUT[6][1] =Vmax;}
-    else{StudentOUT[6][1] =103;}
-
-   if(time>=t1)
-    {
-        StudentOUT[1][1] =103;//2车
-        StudentOUT[3][1] =103;//4车
-        /***6号车决策程序***/
-        if((x_6>=150 && y_6>=60 && y_6<=270)  ||
-           (y_6>=200 && x_6>=60 && x_6<=270)  ||
-           (x_6>=150 && y_6>=-270 && y_6<=-60)||
-           (y_6<=-200 && x_6>=60 && x_6<=270) ||
-           (x_6<=-150 && y_6<=-60&&y_6>=-270) ||
-           (y_6<=-200 && x_6>=-150 && x_6<=60)||
-           (x_6<=-150 && y_6<=270 && y_6>=60) ||
-           (y_6>=200 && x_6>=-150 && x_6<=-60))
-        {StudentOUT[5][1] =Vmax;}
-        else{StudentOUT[5][1] =103;}
-        /***8号车决策程序***/
-        if((x_8>=150 && y_8>=60 && y_8<=270)  ||
-           (y_8>=200 && x_8>=60 && x_8<=270)  ||
-           (x_8>=150 && y_8>=-270 && y_8<=-60)||
-           (y_8<=-200 && x_8>=60 && x_8<=270) ||
-           (x_8<=-150 && y_8<=-60&&y_8>=-270) ||
-           (y_8<=-200 && x_8>=-150 && x_8<=60)||
-           (x_8<=-150 && y_8<=270 && y_8>=60) ||
-           (y_8>=200 && x_8>=-150 && x_8<=-60))
-        {StudentOUT[7][1] =Vmax;}
-        else{StudentOUT[7][1] =103;}
-    }
 
 
 
@@ -902,6 +794,37 @@ double * update_position(double **V_Car, double *Dist_Car, int n_car_sum,int n_c
 
 }
 
+//cross距离数组里面找到最小的正数，即最接近crosspoint的
+double * f_min_positive(double *dist_8s){
+    double * min_dist;
+    int start;
+    min_dist = new double[2];
+    for (int i =0;i<8;i++){
+        if (dist_8s[i]>0){
+            min_dist[0] = i;
+            min_dist[1] = dist_8s[i];
+            start = i;
+        }
+    }
+
+    min_dist[0] = 0;
+    min_dist[1] = dist_8s[0];
+
+    for (int i=start;i<8;i++){
+        if (dist_8s[i]<min_dist[1] & dist_8s[i]>0){
+            min_dist[1] = dist_8s[i];
+            min_dist[0] = i;
+        }
+
+    }
+
+    if (min_dist[1]<0){
+        min_dist[1] = 10000;
+    }
+
+    return min_dist;
+}
+
 //是否撞车
 
 int collision_info(double * Dist_Car, double * V_Car)
@@ -910,9 +833,9 @@ int collision_info(double * Dist_Car, double * V_Car)
 //    p->setBrush(Qt::blue);
 //    p->setPen(Qt::blue);
     //大圈内部是否发生追尾
-    double Dist1;
-    double Dist2;
-    double dist_temp;
+    double Dist1 = 0;
+    double Dist2 = 0;
+    double dist_temp = 0;
     double f_thresh = 40;//OutBridge/10;
     double b_thresh = 0;
     int flag = 0;

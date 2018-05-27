@@ -12,14 +12,25 @@
 #include <QString>
 #include <iostream>
 #include <stdio.h>
+#include <QBuffer>
 
 #include "mainwindow.h"
 
+QFile data1("V_assemble.txt");
+QFile data2("dist.txt");
 
 Map::Map(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Map)
 {
+    data1.open(QFile::WriteOnly | QIODevice::Text);
+    data2.open(QFile::WriteOnly | QIODevice::Text);
+//    buffer1.open(QIODevice::WriteOnly);
+//    buffer2.open(QIODevice::WriteOnly);
+
+
+
+
     ui->setupUi(this);
     timer = new QTimer(this);
 
@@ -31,17 +42,27 @@ Map::Map(QWidget *parent) :
 
 
 
-    setWindowTitle("The Map");
+
     resize(1000, 1000);
-    ACCLERATE = 1.30000000;//最大减速度
+    ACCLERATE = 130000000;//最大减速度
     NUM_COLLISION = 0;//碰撞次数
     NUM_PASS = 0;//通过次数
     Dist_Car = new double[8];
     Fake_Dist_Car = new double[8];
     V_Car = new double*[8];
+    line_tag = new int[8];
     for (int i=0;i<8;i++){
         V_Car[i] = new double[2];
     }
+
+    //地图信息
+    line_box = new double[4];
+    line_box[0] = InCorDownLeft_7_X;
+    line_box[1] = InCorDownRight_2_X;
+    line_box[2] = InCorUpLeft_7_Y;
+    line_box[3] = InCorDownLeft_2_Y;
+
+    //小车位置初始化
     Dist_Car[0] = OutDistDownLeft_7;
     Dist_Car[1] = OutDistDownRight_7;
     Dist_Car[2] = OutDistUpRight_7;
@@ -53,6 +74,16 @@ Map::Map(QWidget *parent) :
     Fake_Dist_Car = Dist_Car;
 
     //id编码成比赛要求的id
+    ID_map = new int[8];
+    ID_map[0] = 7;
+    ID_map[1] = 5;
+    ID_map[2] = 3;
+    ID_map[3] = 1;
+    ID_map[4] = 6;
+    ID_map[5] = 4;
+    ID_map[6] = 2;
+    ID_map[7] = 8;
+
     V_Car[0][0] = 7;
     V_Car[1][0] = 5;
     V_Car[2][0] = 3;
@@ -63,6 +94,7 @@ Map::Map(QWidget *parent) :
     V_Car[7][0] = 8;
     for (int i=0;i<8;i++){
         V_Car[i][1] = 103;
+        line_tag[i] = 0;
     }
     V_Car_real = V_Car;
     //初始化 control point
@@ -263,6 +295,20 @@ Map::Map(QWidget *parent) :
     }
 
 
+
+//    DIST_OUTPUT = new double[6];
+//    V_OUTPUT = new double[25];
+
+//    for (int j=0;j<6;j++){
+//        DIST_OUTPUT[j] = 0;
+//    }
+
+//    for (int k=0;k<25;k++){
+//        DIST_OUTPUT[k] = 0;
+//    }
+
+
+
 }
 
 
@@ -387,6 +433,23 @@ void Map::drawcircles(QPainter *p)
     Fake_Cor_Car = Cor_Car;//初始化
     Cor_Car = dist2cor(Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);
     Fake_Cor_Car = dist2cor(Fake_Dist_Car,NUM_SUM_CAR,NUM_BIG_CAR);//赋值
+
+    //由Cor判断line_tag的状态
+       for (int i=0;i<8;i++){
+           if (Cor_Car[i][1]>=line_box[0] & Cor_Car[i][1]<=line_box[1] & Cor_Car[i][2]>=line_box[2] & Cor_Car[i][3]<=line_box[3]){
+               line_tag[i] = 1;
+           }
+           else{
+               line_tag[i] = 0;
+           }
+       }
+
+    //记录crosspoint
+    double *smallest_cross_dist_v;
+    double *smallest_cross_dist_h;
+    smallest_cross_dist_v = new double[2];      smallest_cross_dist_v[0] = 0;
+    smallest_cross_dist_h = new double[2];      smallest_cross_dist_h[0] = 0;
+
     //由距离判断是否通过cross区域
         //首先把改状态更新 相当于pop up
     for (int i = 0;i<8;i++){
@@ -434,6 +497,15 @@ void Map::drawcircles(QPainter *p)
     //更新实际的速度
     V_Car_real = func_real_v(V_Car_real,V_Car,ACCLERATE);
     //******************把速度大小、速度tag记录在.txt文件中*****************//
+    //判断车是否在中间的区域，来更新line_tag
+    for (int i=0;i<8;i++){
+        if( (Cor_Car[i][1]>=line_box[0]) & (Cor_Car[i][1]<=line_box[1]) & (Cor_Car[i][2]>=line_box[2]) & (Cor_Car[i][2]<=line_box[3])){
+            line_tag[i] = 1;
+        }
+        else{
+            line_tag[i] = 0;
+        }
+    }
 //            QFile data("file.txt");
 //            if (data.open(QFile::WriteOnly | QIODevice::Append)) {
 //                QTextStream out(&data);
@@ -447,17 +519,37 @@ void Map::drawcircles(QPainter *p)
 
     //都记录在一个.txt文件中
 
-    QFile data("file.txt");
-    if (data.open(QFile::WriteOnly | QIODevice::Append)) {
-        QTextStream out(&data);
+
+
+    if (count_all > 1000){
+        QTextStream out(&data1);
+        out << count_all << "\t";
+        //time_step//
         for (int i=0;i<8;i++){
-            for (int j=0;j<2;j++){
-                out << V_Car_real[i][j] <<"\t";
-            }
+
+            out << V_Car_real[i][0] << "\t" << V_Car_real[i][1]<< "\t" << line_tag[i] << "\t";
+            //ID//                       //Velocity//              //Tag//
         }
         out<<"\r\n";
     }
+
+        //data1.close();
+
+
+
+    //先缓存起来
+//    V_OUTPUT[count_all-1][0] = count_all;
+//    for (int i=0;i<8;i++){
+//        V_OUTPUT[count_all-1][3*i + 1] = V_Car_real[i][0];//ID
+//        V_OUTPUT[count_all-1][3*i + 2] = V_Car_real[i][1];
+//        V_OUTPUT[count_all-1][3*i + 3] = line_tag[i];
+//    }
     //****************************************************************//
+
+
+
+
+
 
 
     //更新距离位置
@@ -484,17 +576,17 @@ void Map::drawcircles(QPainter *p)
     int collision = 0;
 
     //大圈内部是否发生追尾
-    double *Dist1 = new double[2];
-    double *Dist2 = new double[2];
-    double dist_temp;
+    double *Dist1 = new double[2];          Dist1[0] = 0; Dist1[1] = 0;
+    double *Dist2 = new double[2];          Dist2[0] = 0; Dist1[1] = 0;
+    double dist_temp = 0;
     double f_thresh_base = 20;
     double f_thresh = 0;//等于f_thresh_base加上一个和速度有关的
     double b_thresh = 15;
     double cf_thresh = 0;//前后跟车的最小距离，V<80是35，V>=80是45
-    double *Dist_Forward = new double[2];
-    double *Dist_Backward = new double[2];
-    double *Dist_Big = new double[2];
-    double *Dist_Small = new double[2];
+    double *Dist_Forward = new double[2];   Dist_Forward[0] = 0; Dist_Forward[1] = 0;
+    double *Dist_Backward = new double[2];  Dist_Backward[0] = 0; Dist_Backward[1] = 0;
+    double *Dist_Big = new double[2];       Dist_Big[0] = 0; Dist_Big[1] = 0;
+    double *Dist_Small = new double[2];     Dist_Small[0] = 0; Dist_Small[1] = 0;
     int flag = 0;
     int idx_big = 1;
     int idx_small = 1;
@@ -635,22 +727,36 @@ void Map::drawcircles(QPainter *p)
             }
         }
     }
+
+
+
+
+
+
     //给Cell_Point加tag，通过两个方向tag的比较可以判断是否相撞S
     p->setBrush(Qt::blue);
     p->setPen(Qt::blue);
-    for (int i=0;i<16;i++){
-        //竖的方向
 
-        if (Cell_Point[i][0] == 0){
+    double *dist_temp_v;//竖的记录每辆车到cross的距离，想从中间选最大的那个
+    dist_temp_v = new double[8]; for (int i=0;i<8;i++){dist_temp_v[i] = 0;}
+
+    double *dist_temp_h;//横的记录每辆车到cross的距离，想从中间选最大的那个
+    dist_temp_h = new double[8]; for (int i=0;i<8;i++){dist_temp_h[i] = 0;}
+
+    int cross_ID = 0;
+    for (int i=0;i<16;i++){
+        //竖的方向--v
+
+        if (Cell_Point[i][0] == 0){//[i][0]这一列就是竖的方向，是否为0来判断大小圈
             for (int j=4;j<8;j++){
-                dist_temp = Cell_Point[i][1]-Dist_Car[j];
+                dist_temp_v[j] = Cell_Point[i][1]-Dist_Car[j];
                 if (V_Car[j][1]<80){
                     f_thresh = f_thresh_base+35;
                 }
                 else{
                     f_thresh = f_thresh_base+45;
                 }
-                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                if((dist_temp_v[j]<f_thresh)&(dist_temp_v[j]>-1*b_thresh))
                 {
                     flag = 1;
 
@@ -659,14 +765,14 @@ void Map::drawcircles(QPainter *p)
         }//小圈
         else{
             for (int j=0;j<4;j++){
-                dist_temp = Cell_Point[i][1] - Dist_Car[j];
+                dist_temp_v[j] = Cell_Point[i][1] - Dist_Car[j];
                 if (V_Car[j][1]<80){
                     f_thresh = f_thresh_base+35;
                 }
                 else{
                     f_thresh = f_thresh_base+45;
                 }
-                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh)){
+                if((dist_temp_v[j]<f_thresh)&(dist_temp_v[j]>-1*b_thresh)){
                   {
                         flag = 1;
 
@@ -675,6 +781,9 @@ void Map::drawcircles(QPainter *p)
                 }
             }
         }
+
+
+
         if (flag==1){
            Cell_Point[i][2] = 1;
           // p->drawEllipse(QPoint(Cell_Point[i][6],Cell_Point[i][7]),5,5);
@@ -684,31 +793,35 @@ void Map::drawcircles(QPainter *p)
             Cell_Point[i][2] = 0;
         }
 
+
+
+
+
         //横的方向
         if (Cell_Point[i][3] == 0){
             for (int j=4;j<8;j++){
-                dist_temp = Cell_Point[i][4]-Dist_Car[j];
+                dist_temp_h[j] = Cell_Point[i][4]-Dist_Car[j];
                 if (V_Car[j][1]<80){
                     f_thresh = f_thresh_base+35;
                 }
                 else{
                     f_thresh = f_thresh_base+45;
                 }
-                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                if((dist_temp_h[j]<f_thresh)&(dist_temp_h[j]>-1*b_thresh))
                     flag = 1;
 
             }
         }//小圈
         else{
             for (int j=0;j<4;j++){
-                dist_temp = Cell_Point[i][4] - Dist_Car[j];
+                dist_temp_h[j] = Cell_Point[i][4] - Dist_Car[j];
                 if (V_Car[j][1]<80){
                     f_thresh = f_thresh_base+35;
                 }
                 else{
                     f_thresh = f_thresh_base+45;
                 }
-                if((dist_temp<f_thresh)&(dist_temp>-1*b_thresh))
+                if((dist_temp_h[j]<f_thresh)&(dist_temp_h[j]>-1*b_thresh))
                     flag = 1;
 
             }
@@ -722,6 +835,42 @@ void Map::drawcircles(QPainter *p)
         else{
             Cell_Point[i][5] = 0;
         }
+
+
+
+
+        cross_ID = i;
+        smallest_cross_dist_v = f_min_positive(dist_temp_v);
+        smallest_cross_dist_h = f_min_positive(dist_temp_h);
+
+
+
+
+        //$$$$$$$$$$$$$$$$$$$$$把dist记录在.txt文件中$$$$$$$$$$$$$$$$$//
+
+
+
+        if (count_all > 1000){
+
+                QTextStream out1(&data2);
+                int v_idx = int(smallest_cross_dist_v[0]);
+                int h_idx = int(smallest_cross_dist_h[0]);
+                out1<<count_all<<"\t"<<cross_ID<<"\t"<<ID_map[v_idx]<<"\t"<<smallest_cross_dist_v[1]<<"\t"<<ID_map[h_idx]<<"\t"<<smallest_cross_dist_h[1];
+                out1<<"\r\n";
+               // data2.close();
+        }
+
+//        //先缓存起来
+
+//        DIST_OUTPUT[count_all-1][0] = count_all;
+//        DIST_OUTPUT[count_all-1][1] = cross_ID;//ID
+//        DIST_OUTPUT[count_all-1][2] = ID_map[v_idx];
+//        DIST_OUTPUT[count_all-1][3] = smallest_cross_dist_v[1];
+//        DIST_OUTPUT[count_all-1][4] = ID_map[h_idx];
+//        DIST_OUTPUT[count_all-1][5] = smallest_cross_dist_h[1];
+
+        //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$//
+
     }
 
 
@@ -772,11 +921,60 @@ void Map::drawcircles(QPainter *p)
         }
     }
 
+
+
     //判断是否到时间
     qDebug()<<count_all;
-    if (count_all == 7164){
+    if (count_all == count_limit){
+
+
+
+//        // 存dist
+//        QFile data("dist.txt");
+//        if (data.open(QFile::WriteOnly | QIODevice::Append)) {
+//            QTextStream out(&data);
+
+//            for (int i=0;i<count_all;i++){
+//                for (int j=0;j<6;j++){
+//                    out << DIST_OUTPUT[i][j];
+//                }
+//                out << "/r/n";
+//            }
+//        }
+
+
+
+//        // 存v
+//        QFile data1("V_assemble.txt");
+//        if (data.open(QFile::WriteOnly | QIODevice::Append)) {
+//            QTextStream out(&data1);
+
+//            out << count_all << "\t";
+//            for (int i=0;i<count_all;i++){
+//                for (int j=0;j<25;j++){
+//                    out << V_OUTPUT[i][j];
+//                }
+//                out << "/r/n";
+//            }
+
+
+//        }
         end_game();
     }
+
+//    delete &smallest_cross_dist_h;
+//    delete &smallest_cross_dist_v;
+//    delete &collision;
+//    delete &dist_temp;
+//    delete &dist_temp_h;
+//    delete &dist_temp_v;
+//    delete &f_thresh;
+//    delete &cf_thresh;
+//    delete &flag;
+//    delete &idx_backward;
+//    delete &idx_forward;
+//    delete &idx_small;
+//    delete &idx_big;
 }
 
 
