@@ -19,12 +19,16 @@
 QFile data1("V_assemble.txt");
 QFile data2("dist.txt");
 
+//用来记录单纯的8个dist
+QFile data3("8Cor.txt");
+
 Map::Map(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Map)
 {
     data1.open(QFile::WriteOnly | QIODevice::Text);
-    data2.open(QFile::WriteOnly | QIODevice::Text);
+//    data2.open(QFile::WriteOnly | QIODevice::Text);
+    data3.open(QFile::WriteOnly | QIODevice::Text);
 //    buffer1.open(QIODevice::WriteOnly);
 //    buffer2.open(QIODevice::WriteOnly);
 
@@ -521,10 +525,11 @@ void Map::drawcircles(QPainter *p)
 
 
 
-    if (count_all > 1000){
+
         QTextStream out(&data1);
         out << count_all << "\t";
         //time_step//
+    if (count_all > 1000){
         for (int i=0;i<8;i++){
 
             out << V_Car_real[i][0] << "\t" << V_Car_real[i][1]<< "\t" << line_tag[i] << "\t";
@@ -850,15 +855,15 @@ void Map::drawcircles(QPainter *p)
 
 
 
-        if (count_all > 1000){
+//        if (count_all > 1000){
 
-                QTextStream out1(&data2);
-                int v_idx = int(smallest_cross_dist_v[0]);
-                int h_idx = int(smallest_cross_dist_h[0]);
-                out1<<count_all<<"\t"<<cross_ID<<"\t"<<ID_map[v_idx]<<"\t"<<smallest_cross_dist_v[1]<<"\t"<<ID_map[h_idx]<<"\t"<<smallest_cross_dist_h[1];
-                out1<<"\r\n";
-               // data2.close();
-        }
+//                QTextStream out1(&data2);
+//                int v_idx = int(smallest_cross_dist_v[0]);
+//                int h_idx = int(smallest_cross_dist_h[0]);
+//                out1<<count_all<<"\t"<<cross_ID<<"\t"<<ID_map[v_idx]<<"\t"<<smallest_cross_dist_v[1]<<"\t"<<ID_map[h_idx]<<"\t"<<smallest_cross_dist_h[1];
+//                out1<<"\r\n";
+//               // data2.close();
+//        }
 
 //        //先缓存起来
 
@@ -869,10 +874,23 @@ void Map::drawcircles(QPainter *p)
 //        DIST_OUTPUT[count_all-1][4] = ID_map[h_idx];
 //        DIST_OUTPUT[count_all-1][5] = smallest_cross_dist_h[1];
 
+
+
+
         //$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$//
 
     }
+    //   单纯地记录8个Cor
+            if (count_all > 1000){
 
+                QTextStream out3(&data3);
+                out3<<count_all<<"\t";
+                for (int i = 0;i<7;i++){
+                    out3<<Cor_Car[i][1]<<"\t"<<Cor_Car[i][2]<<"\t";
+                }
+                out3<<Cor_Car[7][1]<<"\t"<<Cor_Car[7][2]<<"\r\n";
+                // data2.close();
+            }
 
     //判断是否相撞
     for (int i=0;i<16;i++){
