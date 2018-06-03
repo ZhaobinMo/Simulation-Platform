@@ -1,20 +1,14 @@
 #ifndef MOVING_H
 #define MOVING_H
 
+
 #include "cor_map.h"
+#include "math.h"
 #include<QDebug>
 #include<QTime>
 #include <cstdlib>
-#include<math.h>
 
-//由坐标信息生成V控制信号
 
-#include "cor_map.h"
-#include<QDebug>
-#include<QTime>
-#include <cstdlib>
-#include<sys/time.h>
-#include <math.h>
 
 
 //由坐标信息生成V控制信号
@@ -33,6 +27,7 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double ID_2 = StudentIN[1][0];//第二辆小车的ID
     double x_2 = StudentIN[1][1];//第二辆小车的横坐标
     double y_2 = StudentIN[1][2];//第二辆小车的纵坐标
+
     double ID_3 = StudentIN[2][0];//第三辆小车的ID
     double x_3 = StudentIN[2][1];//第三辆小车的横坐标
     double y_3 = StudentIN[2][2];//第三辆小车的纵坐标
@@ -57,273 +52,171 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double x_8 = StudentIN[7][1];//第八辆小车的横坐标
     double y_8 = StudentIN[7][2];//第八辆小车的纵坐标
     //***************决策程序修改开始位置*************//
+    int speed[13] = {0,9,17,26,34,43,52,60,69,77,86,95,103};
+        StudentOUT[0][0] = ID_1;
+        StudentOUT[1][0] = ID_2;
+        StudentOUT[2][0] = ID_3;
+        StudentOUT[3][0] = ID_4;
+        StudentOUT[4][0] = ID_5;
+        StudentOUT[5][0] = ID_6;
+        StudentOUT[6][0] = ID_7;
+        StudentOUT[7][0] = ID_8;
 
-    double t = (double) clock();
-    double time = t/CLOCKS_PER_SEC;
-    double Vmax=70;
-    double Va=80;
-    double t1=6;
- /*t1需要针对不同类型电脑进行修改，windows系统设置为6左右，mac设置为1.5左右*/
+        StudentOUT[1][1] = speed[12];
+        StudentOUT[2][1] = speed[12];
+        StudentOUT[5][1] = speed[12];
+        StudentOUT[6][1] = speed[12];
+        StudentOUT[0][1] = speed[12];
+        StudentOUT[3][1] = speed[12];
+        StudentOUT[4][1] = speed[12];
+        StudentOUT[7][1] = speed[12];
 
-    StudentOUT[0][0] = ID_1;
-    StudentOUT[1][0] = ID_2;
-    StudentOUT[2][0] = ID_3;
-    StudentOUT[3][0] = ID_4;
-    StudentOUT[4][0] = ID_5;
-    StudentOUT[5][0] = ID_6;
-    StudentOUT[6][0] = ID_7;
-    StudentOUT[7][0] = ID_8;
+        bool flag1 = false, flag2 = false, flag3 = false, flag4 = false, flag5 = false, flag6 = false, flag11 = false, flag12 = false, flag15 = false, flag16 = false;
+        for(int i = 0; i < 8; ++i)
+        {
+            if((StudentIN[i][1] >= -75) && (StudentIN[i][1] <= 0)
+                && (StudentIN[i][2] >= -75) && (StudentIN[i][2] <= 0))
+            {
+                flag1 = true;
+            }
+            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 75)
+                && (StudentIN[i][2] >= -75) && (StudentIN[i][2] <= 0))
+            {
+                flag2 = true;
+            }
+            else if((StudentIN[i][1] >= 70) && (StudentIN[i][1] <= 200)
+                && (StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 0))
+            {
+                flag3 = true;
+            }
+            else if((StudentIN[i][1] >= -200) && (StudentIN[i][1] <= -70)
+                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 70))
+            {
+                flag4 = true;
+            }
+            else if((StudentIN[i][1] >= -75) && (StudentIN[i][1] <= 0)
+                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 75))
+            {
+                flag5 = true;
+            }
+            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 75)
+                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 75))
+            {
+                flag6 = true;
+            }
+            else if((StudentIN[i][1] >= -76) && (StudentIN[i][1] <= 0)
+                && (StudentIN[i][2] >= -76) && (StudentIN[i][2] <= 0))
+            {
+                flag11 = true;
+            }
+            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 76)
+                && (StudentIN[i][2] >= -76) && (StudentIN[i][2] <= 0))
+            {
+                flag12 = true;
+            }
+            else if((StudentIN[i][1] >= -76) && (StudentIN[i][1] <= 0)
+                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 76))
+            {
+                flag15 = true;
+            }
+            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 76)
+                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 76))
+            {
+                flag16 = true;
+            }
+        }
 
-    // StudentOUT[5][1] =0;//6车
-    // StudentOUT[7][1] =0;//8车
-    // StudentOUT[4][1] =103;//5车
-    // StudentOUT[6][1] =103;//7车
+        for(int i = 0; i < 8; ++i)
+        {
+            if((StudentIN[i][1] >= -70) && (StudentIN[i][1] <= 0)
+            && (StudentIN[i][2] >= -160) && (StudentIN[i][2] <= -70))
+            {
+                if(flag1 || flag2 || flag5 || flag3 || flag4)
+                {
+                    StudentOUT[i][1] = speed[0];
+                }
+            }
+            if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 70)
+            && (StudentIN[i][2] >= 70) && (StudentIN[i][2] <= 160))
+            {
+                if(flag2 || flag3 || flag4 || flag5 || flag6)
+                {
+                    StudentOUT[i][1] = speed[0];
+                }
+            }
+            if((StudentIN[i][1] >= 70) && (StudentIN[i][1] <= 160)
+            && (StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 0))
+            {
+                if(flag1 || flag2 || flag6)
+                {
+                    StudentOUT[i][1] = speed[0];
+                }
+            }
 
-    StudentOUT[0][1] =103;//1车
-    StudentOUT[2][1] =103;//3车
+            if((StudentIN[i][1] >= -160) && (StudentIN[i][1] <= -70)
+            && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 70))
+            {
+                if(flag1 || flag5 || flag6)
+                {
+                    StudentOUT[i][1] = speed[0];
+                }
+            }
+        }
 
-    /*车并行调整代码*/
-    /*1车5车调整代码*/
-    if((y_1>=-200 && y_1<=-60 && x_1<=-20 && x_1>=-60)&&
-       (y_5>=-200 && y_5<=-60 && x_5<=-20 && x_5>=-60)){
-       double d=y_1-y_5;
-       if(d>=20) {StudentOUT[0][1] =Va;}
-       if(d<=-20){StudentOUT[4][1] =Va;}}
 
-    if((y_1>=60   && y_1<=200 && x_1<=-20 && x_1>=-60)&&
-       (y_5>=60   && y_5<=200 && x_5<=-20 && x_5>=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
 
-    if((y_1>=-200 && y_1<=-60 && x_1>=20  && x_1<=60)&&
-       (y_5>=-200 && y_5<=-60 && x_5>=20  && x_5<=60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
+        //int next[8] = {6,7,0,1,2,3,4,5};
+        //int id[8] = {7,5,3,1,6,4,2,8};
 
-    if((y_1>=60   && y_1<=200 && x_1>=20  && x_1<=60 )&&
-       (y_5>=60   && y_5<=200 && x_5>=20  && x_5<=60 )){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
+        int next[8] = {1,2,3,0,5,6,7,4};
 
-    if((y_1>=-60  && y_1<=-20 && x_1>=-150&& x_1<=-60)&&
-       (y_5>=-60  && y_5<=-20 && x_5>=-150&& x_5<=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
-    if((y_1>=20   && y_1<=60  && x_1>=60  && x_1<=150)&&
-       (y_5>=20   && y_5<=60  && x_5>=60  && x_5<=150)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
-    if((y_1>=-60  && y_1<=-20 && x_1>=60  && x_1<=150)&&
-       (y_5>=-60  && y_5<=-20 && x_5>=60  && x_5<=150)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[0][1] =Va;}
-            if(d<=-20){StudentOUT[4][1] =Va;}}
-    if((y_1>=20   && y_1<=60  && x_1>=-150&& x_1<=-60)&&
-       (y_5>=20   && y_5<=60  && x_5>=-150&& x_5<=-60)){
-        double d=y_1-y_5;
-            if(d>=20) {StudentOUT[4][1] =Va;}
-            if(d<=-20){StudentOUT[0][1] =Va;}}
-    /*2车、6车并行*/
-    if((y_2>=-200 && y_2<=-60 && x_2<=-20 && x_2>=-60)&&
-       (y_6>=-200 && y_6<=-60 && x_6<=-20 && x_6>=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
+        //对碰撞的定义
+        for(int i = 0; i < 8; ++i)
+        {
+            double dx = StudentIN[i][1] - StudentIN[next[i]][1];
+            double dy = StudentIN[i][2] - StudentIN[next[i]][2];
+            if(dx*dx+dy*dy<=58*58)
+            {
+          /*     if((StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 70)
+                    && (StudentIN[next[i]][1] >= -70) && (StudentIN[next[i]][1] <= 70)
+                    && ((StudentIN[next[i]][2] <= -70) || (StudentIN[next[i]][2] >= 70)))
+                {
+                    continue;
+                }
+          */
+                if((StudentIN[i][1] * StudentIN[next[i]][1] < 0)
+                    || (StudentIN[i][2] * StudentIN[next[i]][2] < 0))
+                {
+                    continue;
+                }
+                StudentOUT[i][1] = speed[0];
+            }
+        }
 
-    if((y_2>=60   && y_2<=200 && x_2<=-20 && x_2>=-60)&&
-       (y_6>=60   && y_6<=200 && x_6<=-20 && x_6>=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
 
-    if((y_2>=-200 && y_2<=-60 && x_2>=20  && x_2<=60)&&
-       (y_6>=-200 && y_6<=-60 && x_6>=20  && x_6<=60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
+        //对于路口的车都不停下来
+        for(int i = 0; i < 8; ++i)
+        {
+            if((StudentIN[i][1] >= -115) && (StudentIN[i][1] <= 115)
+            && (StudentIN[i][2] >= -115) && (StudentIN[i][2] <= 115))
+            {
+                StudentOUT[i][1] = speed[12];
+            }
+        }
 
-    if((y_2>=60   && y_2<=200 && x_2>=20  && x_2<=60 )&&
-       (y_6>=60   && y_6<=200 && x_6>=20  && x_6<=60 )){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
 
-    if((y_2>=-60  && y_2<=-20 && x_2>=-150&& x_2<=-60)&&
-       (y_6>=-60  && y_6<=-20 && x_6>=-150&& x_6<=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
-    if((y_2>=20   && y_2<=60  && x_2>=60  && x_2<=150)&&
-       (y_6>=20   && y_6<=60  && x_6>=60  && x_6<=150)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
-    if((y_2>=-60  && y_2<=-20 && x_2>=60  && x_2<=150)&&
-       (y_6>=-60  && y_6<=-20 && x_6>=60  && x_6<=150)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[1][1] =Va;}
-        if(d<=-20){StudentOUT[5][1] =Va;}}
-    if((y_2>=20   && y_2<=60  && x_2>=-150&& x_2<=-60)&&
-       (y_6>=20   && y_6<=60  && x_6>=-150&& x_6<=-60)){
-        double d=y_2-y_6;
-        if(d>=20) {StudentOUT[5][1] =Va;}
-        if(d<=-20){StudentOUT[1][1] =Va;}}
-    /*3车、7车并行*/
-    if((y_3>=-200 && y_3<=-60 && x_3<=-20 && x_3>=-60)&&
-       (y_7>=-200 && y_7<=-60 && x_7<=-20 && x_7>=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
 
-    if((y_3>=60   && y_3<=200 && x_3<=-20 && x_3>=-60)&&
-       (y_7>=60   && y_7<=200 && x_7<=-20 && x_7>=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
 
-    if((y_3>=-200 && y_3<=-60 && x_3>=20  && x_3<=60)&&
-       (y_7>=-200 && y_7<=-60 && x_7>=20  && x_7<=60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
 
-    if((y_3>=60   && y_3<=200 && x_3>=20  && x_3<=60 )&&
-       (y_7>=60   && y_7<=200 && x_7>=20  && x_7<=60 )){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
 
-    if((y_3>=-60  && y_3<=-20 && x_3>=-150&& x_3<=-60)&&
-       (y_7>=-60  && y_7<=-20 && x_7>=-150&& x_7<=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
-    if((y_3>=20   && y_3<=60  && x_3>=60  && x_3<=150)&&
-       (y_7>=20   && y_7<=60  && x_7>=60  && x_7<=150)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-    if((y_3>=-60  && y_3<=-20 && x_3>=60  && x_3<=150)&&
-       (y_7>=-60  && y_7<=-20 && x_7>=60  && x_7<=150)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[2][1] =Va;}
-        if(d<=-20){StudentOUT[6][1] =Va;}}
-    if((y_3>=20   && y_3<=60  && x_3>=-150&& x_3<=-60)&&
-       (y_7>=20   && y_7<=60  && x_7>=-150&& x_7<=-60)){
-        double d=y_3-y_7;
-        if(d>=20) {StudentOUT[6][1] =Va;}
-        if(d<=-20){StudentOUT[2][1] =Va;}}
-    /*4车、8车并行*/
-    if((y_4>=-200 && y_4<=-60 && x_4<=-20 && x_4>=-60)&&
-       (y_8>=-200 && y_8<=-60 && x_8<=-20 && x_8>=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
 
-    if((y_4>=60   && y_4<=200 && x_4<=-20 && x_4>=-60)&&
-       (y_8>=60   && y_8<=200 && x_8<=-20 && x_8>=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
 
-    if((y_4>=-200 && y_4<=-60 && x_4>=20  && x_4<=60)&&
-       (y_8>=-200 && y_8<=-60 && x_8>=20  && x_8<=60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
 
-    if((y_4>=60   && y_4<=200 && x_4>=20  && x_4<=60 )&&
-       (y_8>=60   && y_8<=200 && x_8>=20  && x_8<=60 )){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-
-    if((y_4>=-60  && y_4<=-20 && x_4>=-150&& x_4<=-60)&&
-       (y_8>=-60  && y_8<=-20 && x_8>=-150&& x_8<=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-    if((y_4>=20   && y_4<=60  && x_4>=60  && x_4<=150)&&
-       (y_8>=20   && y_8<=60  && x_8>=60  && x_8<=150)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-    if((y_4>=-60  && y_4<=-20 && x_4>=60  && x_4<=150)&&
-       (y_8>=-60  && y_8<=-20 && x_8>=60  && x_8<=150)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[3][1] =Va;}
-        if(d<=-20){StudentOUT[7][1] =Va;}}
-    if((y_4>=20   && y_4<=60  && x_4>=-150&& x_4<=-60)&&
-       (y_8>=20   && y_8<=60  && x_8>=-150&& x_8<=-60)){
-        double d=y_4-y_8;
-        if(d>=20) {StudentOUT[7][1] =Va;}
-        if(d<=-20){StudentOUT[3][1] =Va;}}
-
-    /***5号车决策程序***/
-    if((x_5>=150 && y_5>=60 && y_5<=270)  ||
-       (y_5>=200 && x_5>=60 && x_5<=270)  ||
-       (x_5>=150 && y_5>=-270 && y_5<=-60)||
-       (y_5<=-200 && x_5>=60 && x_5<=270) ||
-       (x_5<=-150 && y_5<=-60&&y_5>=-270) ||
-       (y_5<=-200 && x_5>=-150 && x_5<=60)||
-       (x_5<=-150 && y_5<=270 && y_5>=60) ||
-       (y_5>=200 && x_5>=-150 && x_5<=-60))
-    {StudentOUT[4][1] =Vmax;}
-    else{StudentOUT[4][1] =103;}
-
-    /***7号车决策程序***/
-    if((x_7>=150 && y_7>=60 && y_7<=270)  ||
-       (y_7>=200 && x_7>=60 && x_7<=270)  ||
-       (x_7>=150 && y_7>=-270 && y_7<=-60)||
-       (y_7<=-200 && x_7>=60 && x_7<=270) ||
-       (x_7<=-150 && y_7<=-60&&y_7>=-270) ||
-       (y_7<=-200 && x_7>=-150 && x_7<=60)||
-       (x_7<=-150 && y_7<=270 && y_7>=60) ||
-       (y_7>=200 && x_7>=-150 && x_7<=-60))
-    {StudentOUT[6][1] =Vmax;}
-    else{StudentOUT[6][1] =103;}
-
-   if(time>=t1)
-    {
-        StudentOUT[1][1] =103;//2车
-        StudentOUT[3][1] =103;//4车
-        /***6号车决策程序***/
-        if((x_6>=150 && y_6>=60 && y_6<=270)  ||
-           (y_6>=200 && x_6>=60 && x_6<=270)  ||
-           (x_6>=150 && y_6>=-270 && y_6<=-60)||
-           (y_6<=-200 && x_6>=60 && x_6<=270) ||
-           (x_6<=-150 && y_6<=-60&&y_6>=-270) ||
-           (y_6<=-200 && x_6>=-150 && x_6<=60)||
-           (x_6<=-150 && y_6<=270 && y_6>=60) ||
-           (y_6>=200 && x_6>=-150 && x_6<=-60))
-        {StudentOUT[5][1] =Vmax;}
-        else{StudentOUT[5][1] =103;}
-        /***8号车决策程序***/
-        if((x_8>=150 && y_8>=60 && y_8<=270)  ||
-           (y_8>=200 && x_8>=60 && x_8<=270)  ||
-           (x_8>=150 && y_8>=-270 && y_8<=-60)||
-           (y_8<=-200 && x_8>=60 && x_8<=270) ||
-           (x_8<=-150 && y_8<=-60&&y_8>=-270) ||
-           (y_8<=-200 && x_8>=-150 && x_8<=60)||
-           (x_8<=-150 && y_8<=270 && y_8>=60) ||
-           (y_8>=200 && x_8>=-150 && x_8<=-60))
-        {StudentOUT[7][1] =Vmax;}
-        else{StudentOUT[7][1] =103;}
-    }
 
 
   //***************决策程序修改结束位置*************//
-
-     return StudentOUT;
-
+    return StudentOUT;
 }
-
-
 
 double interp(double PWM_In){
     double *PWM_map = new double[13];

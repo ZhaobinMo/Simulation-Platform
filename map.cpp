@@ -529,7 +529,7 @@ void Map::drawcircles(QPainter *p)
         QTextStream out(&data1);
         out << count_all << "\t";
         //time_step//
-    if (count_all > 1000){
+    if (count_all > 0){
         for (int i=0;i<8;i++){
 
             out << V_Car_real[i][0] << "\t" << V_Car_real[i][1]<< "\t" << line_tag[i] << "\t";
@@ -881,7 +881,7 @@ void Map::drawcircles(QPainter *p)
 
     }
     //   单纯地记录8个Cor
-            if (count_all > 1000){
+            if (count_all > 0){
 
                 QTextStream out3(&data3);
                 out3<<count_all<<"\t";
