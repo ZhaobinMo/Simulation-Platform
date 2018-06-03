@@ -15,8 +15,8 @@
 double ** decision_making(double **StudentIN)//StudentIN8行3列
 {
     //定义决策程序输出StudentOUT
-    double **StudentOUT = (double**)calloc(8, sizeof(double*));
-    for (int i=0;i<8;i++){
+    double **StudentOUT = (double**)calloc(7, sizeof(double*));
+    for (int i=0;i<7;i++){
         StudentOUT[i] = (double*)calloc(2,sizeof(double));
     };
     //定义中间变量
@@ -48,11 +48,11 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
     double x_7 = StudentIN[6][1];//第七辆小车的横坐标
     double y_7 = StudentIN[6][2];//第七辆小车的纵坐标
 
-    double ID_8 = StudentIN[7][0];//第八辆小车的ID
-    double x_8 = StudentIN[7][1];//第八辆小车的横坐标
-    double y_8 = StudentIN[7][2];//第八辆小车的纵坐标
+//    double ID_8 = StudentIN[7][0];//第八辆小车的ID
+//    double x_8 = StudentIN[7][1];//第八辆小车的横坐标
+//    double y_8 = StudentIN[7][2];//第八辆小车的纵坐标
     //***************决策程序修改开始位置*************//
-    int speed[13] = {0,9,17,26,34,43,52,60,69,77,86,95,103};
+
         StudentOUT[0][0] = ID_1;
         StudentOUT[1][0] = ID_2;
         StudentOUT[2][0] = ID_3;
@@ -60,158 +60,17 @@ double ** decision_making(double **StudentIN)//StudentIN8行3列
         StudentOUT[4][0] = ID_5;
         StudentOUT[5][0] = ID_6;
         StudentOUT[6][0] = ID_7;
-        StudentOUT[7][0] = ID_8;
+       // StudentOUT[7][0] = ID_8;
 
-        StudentOUT[1][1] = speed[12];
-        StudentOUT[2][1] = speed[12];
-        StudentOUT[5][1] = speed[12];
-        StudentOUT[6][1] = speed[12];
-        StudentOUT[0][1] = speed[12];
-        StudentOUT[3][1] = speed[12];
-        StudentOUT[4][1] = speed[12];
-        StudentOUT[7][1] = speed[12];
 
-        bool flag1 = false, flag2 = false, flag3 = false, flag4 = false, flag5 = false, flag6 = false, flag11 = false, flag12 = false, flag15 = false, flag16 = false;
-        for(int i = 0; i < 8; ++i)
+
+        for(int i = 0; i < 7; i++)
         {
-            if((StudentIN[i][1] >= -75) && (StudentIN[i][1] <= 0)
-                && (StudentIN[i][2] >= -75) && (StudentIN[i][2] <= 0))
-            {
-                flag1 = true;
-            }
-            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 75)
-                && (StudentIN[i][2] >= -75) && (StudentIN[i][2] <= 0))
-            {
-                flag2 = true;
-            }
-            else if((StudentIN[i][1] >= 70) && (StudentIN[i][1] <= 200)
-                && (StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 0))
-            {
-                flag3 = true;
-            }
-            else if((StudentIN[i][1] >= -200) && (StudentIN[i][1] <= -70)
-                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 70))
-            {
-                flag4 = true;
-            }
-            else if((StudentIN[i][1] >= -75) && (StudentIN[i][1] <= 0)
-                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 75))
-            {
-                flag5 = true;
-            }
-            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 75)
-                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 75))
-            {
-                flag6 = true;
-            }
-            else if((StudentIN[i][1] >= -76) && (StudentIN[i][1] <= 0)
-                && (StudentIN[i][2] >= -76) && (StudentIN[i][2] <= 0))
-            {
-                flag11 = true;
-            }
-            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 76)
-                && (StudentIN[i][2] >= -76) && (StudentIN[i][2] <= 0))
-            {
-                flag12 = true;
-            }
-            else if((StudentIN[i][1] >= -76) && (StudentIN[i][1] <= 0)
-                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 76))
-            {
-                flag15 = true;
-            }
-            else if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 76)
-                && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 76))
-            {
-                flag16 = true;
-            }
+
+
+                StudentOUT[i][1] = 103;
+
         }
-
-        for(int i = 0; i < 8; ++i)
-        {
-            if((StudentIN[i][1] >= -70) && (StudentIN[i][1] <= 0)
-            && (StudentIN[i][2] >= -160) && (StudentIN[i][2] <= -70))
-            {
-                if(flag1 || flag2 || flag5 || flag3 || flag4)
-                {
-                    StudentOUT[i][1] = speed[0];
-                }
-            }
-            if((StudentIN[i][1] >= 0) && (StudentIN[i][1] <= 70)
-            && (StudentIN[i][2] >= 70) && (StudentIN[i][2] <= 160))
-            {
-                if(flag2 || flag3 || flag4 || flag5 || flag6)
-                {
-                    StudentOUT[i][1] = speed[0];
-                }
-            }
-            if((StudentIN[i][1] >= 70) && (StudentIN[i][1] <= 160)
-            && (StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 0))
-            {
-                if(flag1 || flag2 || flag6)
-                {
-                    StudentOUT[i][1] = speed[0];
-                }
-            }
-
-            if((StudentIN[i][1] >= -160) && (StudentIN[i][1] <= -70)
-            && (StudentIN[i][2] >= 0) && (StudentIN[i][2] <= 70))
-            {
-                if(flag1 || flag5 || flag6)
-                {
-                    StudentOUT[i][1] = speed[0];
-                }
-            }
-        }
-
-
-
-        //int next[8] = {6,7,0,1,2,3,4,5};
-        //int id[8] = {7,5,3,1,6,4,2,8};
-
-        int next[8] = {1,2,3,0,5,6,7,4};
-
-        //对碰撞的定义
-        for(int i = 0; i < 8; ++i)
-        {
-            double dx = StudentIN[i][1] - StudentIN[next[i]][1];
-            double dy = StudentIN[i][2] - StudentIN[next[i]][2];
-            if(dx*dx+dy*dy<=58*58)
-            {
-          /*     if((StudentIN[i][2] >= -70) && (StudentIN[i][2] <= 70)
-                    && (StudentIN[next[i]][1] >= -70) && (StudentIN[next[i]][1] <= 70)
-                    && ((StudentIN[next[i]][2] <= -70) || (StudentIN[next[i]][2] >= 70)))
-                {
-                    continue;
-                }
-          */
-                if((StudentIN[i][1] * StudentIN[next[i]][1] < 0)
-                    || (StudentIN[i][2] * StudentIN[next[i]][2] < 0))
-                {
-                    continue;
-                }
-                StudentOUT[i][1] = speed[0];
-            }
-        }
-
-
-        //对于路口的车都不停下来
-        for(int i = 0; i < 8; ++i)
-        {
-            if((StudentIN[i][1] >= -115) && (StudentIN[i][1] <= 115)
-            && (StudentIN[i][2] >= -115) && (StudentIN[i][2] <= 115))
-            {
-                StudentOUT[i][1] = speed[12];
-            }
-        }
-
-
-
-
-
-
-
-
-
 
 
   //***************决策程序修改结束位置*************//
@@ -691,8 +550,8 @@ double ** dist2cor(double *Dist_Car, int n_car_sum, int n_car_big)
 {
     //把Dist信息转换为Cor信息
     double ** Cor_Car;
-    Cor_Car = new double*[8];
-    for (int i=0;i<8;i++)
+    Cor_Car = new double*[7];
+    for (int i=0;i<7;i++)
         Cor_Car[i] = new double[3];
 
 
@@ -708,7 +567,7 @@ double ** dist2cor(double *Dist_Car, int n_car_sum, int n_car_big)
     Cor_Car[4][0] = 6;
     Cor_Car[5][0] = 4;
     Cor_Car[6][0] = 2;
-    Cor_Car[7][0] = 8;
+  //  Cor_Car[7][0] = 8;
     double *temp;
     temp = new double[2];
     int i;
@@ -770,13 +629,13 @@ double func_tag_v_tag(double Dist_Car, int i){
     return tag;
 }
 double ** func_tag_v_main(double**V_Car, double* Dist_Car){
-    for (int i=0;i<8;i++){
+    for (int i=0;i<7;i++){
         V_Car[i][1] = func_tag_v_tag(Dist_Car[i],i);
     }
     return V_Car;
 }
 double ** func_real_v(double **V_Car_real, double **V_Car, double ACCLERATE){
-    for (int i=0;i<8;i++){
+    for (int i=0;i<7;i++){
         V_Car_real[i][1] = V_Car_real[i][1] + func_sgn( V_Car[i][1] - V_Car_real[i][1] )
                 *func_min( (V_Car[i][1] - V_Car_real[i][1]) * func_sgn(V_Car[i][1] - V_Car_real[i][1])/t_paint,ACCLERATE*100/1000 )*t_paint;
         V_Car_real[i][0] = V_Car[i][0];
@@ -808,7 +667,7 @@ double * f_min_positive(double *dist_8s){
     double * min_dist;
     int start;
     min_dist = new double[2];
-    for (int i =0;i<8;i++){
+    for (int i =0;i<7;i++){
         if (dist_8s[i]>0){
             min_dist[0] = i;
             min_dist[1] = dist_8s[i];
@@ -819,7 +678,7 @@ double * f_min_positive(double *dist_8s){
     min_dist[0] = 0;
     min_dist[1] = dist_8s[0];
 
-    for (int i=start;i<8;i++){
+    for (int i=start;i<7;i++){
         if (dist_8s[i]<min_dist[1] & dist_8s[i]>0){
             min_dist[1] = dist_8s[i];
             min_dist[0] = i;

@@ -61,9 +61,7 @@ private:
 
     double *line_box;                       //地图信息    0-x左   1-x右    2-y上(坐标是倒着的)    3-y下
 
-    int NUM_COLLISION;                      //碰撞次数
 
-    int NUM_PASS;                           //通过次数
 
 //    double *DIST_OUTPUT;                 //输出dist.txt文件的缓存
 

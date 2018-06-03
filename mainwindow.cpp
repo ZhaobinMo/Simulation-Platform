@@ -9,14 +9,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->LCD_collision->display(map.show_num_collision());
-    ui->LCD_pass->display(map.show_num_pass());
+
     timer_count_down = new QTimer(this);
-    timer_showLCD = new QTimer(this);
-    timer_showLCD->start(30);
+
     connect(timer_count_down,SIGNAL(timeout()),this,SLOT(show_time()));
-    connect(timer_showLCD,SIGNAL(timeout()),this,SLOT(count_num_collision()));
-    connect(timer_showLCD,SIGNAL(timeout()),this,SLOT(count_num_pass()));
+
 
 }
 
@@ -49,13 +46,6 @@ void MainWindow::on_Start_clicked()
 
 }
 
-void MainWindow::count_num_collision(){
-    ui->LCD_collision->display(map.show_num_collision());
-}
-
-void MainWindow::count_num_pass(){
-    ui->LCD_pass->display(map.show_num_pass());
-}
 
 void MainWindow::show_time(){
     if(sum_time > 0){

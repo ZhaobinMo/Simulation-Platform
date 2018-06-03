@@ -13,7 +13,7 @@ float PI = 3.1415926;//acos(-1.0);
  int count_file = 0;//用来记录txt
  int count_limit = 7164;
  int NUM_BIG_CAR = 4;
- int NUM_SUM_CAR = 8;
+ int NUM_SUM_CAR = 7;
  double vers = -1;
 //大圈：正方形左下角为起点（距离为0）定义各控制点的距离、圆的半径
 
