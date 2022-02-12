@@ -3,3 +3,9 @@ This repo is the codes for a simulation platform for the competition "Competitio
 
 The simulation platform is for the contestants to verify their algorihm virtually, before using the real competition toy cars.
 The platform is illustrated in the animation below, where the dots represent cars and edges represent roads.
+
+<img src="https://github.com/ZhaobinMo/Simulation-Platform/blob/master/animation/platform.gif" width="300" height="300" />
+
+After contestants' algorithms pass the virtual evaluation, they can be applied to control the real toy cars:
+
+<img src="https://github.com/ZhaobinMo/Simulation-Platform/blob/master/animation/real.gif" width="640" height="368" />
